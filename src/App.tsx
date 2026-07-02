@@ -12,11 +12,18 @@ export default function App() {
   return (
     <>
       <header className="hero">
+        <div className="hero__arch hero__arch--left" aria-hidden="true" />
+        <div className="hero__arch hero__arch--right" aria-hidden="true" />
+        <div className="hero__chevrons" aria-hidden="true">
+          <span /><span /><span />
+        </div>
         <div className="hero__inner">
           <div className="hero__brand">
-            <BrandMark />
-            <span className="hero__brand-name">SwiftChecker</span>
+            <img src="/brand/shyft-logo-white.svg" alt="Shyft" />
+            <span className="hero__brand-divider" aria-hidden="true" />
+            <span className="hero__brand-product">SwiftChecker</span>
           </div>
+          <p className="sh-overline hero__eyebrow">Swift &amp; IBAN checker</p>
           <h1 className="hero__title">
             Check bank codes <em>before</em> the money moves
           </h1>
@@ -28,7 +35,7 @@ export default function App() {
       </header>
 
       <main className="main">
-        <Card raised className="tool-card">
+        <Card tone="raised" className="tool-card">
           <div className="tool-card__tabs">
             <Segmented<Tool>
               ariaLabel="Choose a tool"
@@ -49,8 +56,7 @@ export default function App() {
       <footer className="footer">
         <div className="footer__inner">
           <div className="footer__brand">
-            <BrandMark />
-            <span>SwiftChecker</span>
+            <img src="/brand/shyft-logo-white.svg" alt="Shyft" />
           </div>
           <p className="footer__disclaimer">
             Bank data provided by{" "}
@@ -63,17 +69,5 @@ export default function App() {
         </div>
       </footer>
     </>
-  );
-}
-
-function BrandMark() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="8" fill="var(--shyft-accent)" />
-      <path
-        d="M9 20.5c1.4 1.6 3.6 2.5 6 2.5 3.6 0 6-1.7 6-4.4 0-2.4-1.6-3.6-4.9-4.3l-2-.4c-1.7-.4-2.5-.9-2.5-1.9 0-1.2 1.3-2 3.2-2 1.9 0 3.5.7 4.6 1.9l1.9-2.2C19.8 8.1 17.6 7.2 15 7.2c-3.4 0-5.9 1.8-5.9 4.4 0 2.4 1.7 3.6 4.7 4.2l2.1.5c1.9.4 2.6 1 2.6 2 0 1.3-1.4 2.1-3.4 2.1-2.1 0-4-.9-5.2-2.3L9 20.5z"
-        fill="var(--shyft-ink-deep)"
-      />
-    </svg>
   );
 }

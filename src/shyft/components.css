@@ -1,0 +1,382 @@
+/* ============================================================
+   Shyft component classes — styled to the Shyft DS component
+   specs (Button, Input, Card, Tag, StatusPill, ListRow rhythm).
+   ============================================================ */
+
+/* ---------- Button — pill CTA, heavy label, press to .97 ---------- */
+
+.shyft-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.12s ease, filter 0.15s ease, background 0.15s ease;
+}
+
+.shyft-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.shyft-btn:active {
+  transform: scale(0.97);
+}
+
+.shyft-btn--sm {
+  height: 36px;
+  padding: 0 16px;
+  font-size: var(--fs-body-sm);
+}
+
+.shyft-btn--md {
+  height: 46px;
+  padding: 0 22px;
+  font-size: var(--fs-body);
+}
+
+.shyft-btn--lg {
+  height: 54px;
+  padding: 0 28px;
+  font-size: var(--fs-title);
+}
+
+.shyft-btn--primary {
+  background: var(--brand);
+  color: var(--text-on-brand);
+  box-shadow: var(--shadow-brand);
+}
+
+.shyft-btn--primary:hover {
+  background: var(--brand-strong);
+}
+
+.shyft-btn--secondary {
+  background: var(--surface-card);
+  color: var(--text-strong);
+  border: 1.5px solid var(--border-strong);
+}
+
+.shyft-btn--secondary:hover {
+  background: var(--surface-sunken);
+}
+
+.shyft-btn--ghost {
+  background: transparent;
+  color: var(--brand-strong);
+}
+
+.shyft-btn--ghost:hover {
+  background: var(--brand-soft);
+}
+
+.shyft-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------- Input — 1.5px border, 14px radius, azure focus ring ---------- */
+
+.shyft-input {
+  width: 100%;
+  height: 60px;
+  padding: 0 16px;
+  background: var(--surface-card);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  color: var(--text-strong);
+  text-transform: uppercase;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.shyft-input::placeholder {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-muted);
+}
+
+.shyft-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: var(--ring);
+}
+
+.shyft-input--error {
+  border-color: var(--negative);
+}
+
+.shyft-input--error:focus {
+  border-color: var(--negative);
+  box-shadow: 0 0 0 4px rgba(214, 92, 114, 0.22);
+}
+
+/* ---------- Card — white, soft cool shadow ---------- */
+
+.shyft-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.shyft-card--raised {
+  border: none;
+  box-shadow: var(--shadow-lg);
+}
+
+.shyft-card--brand {
+  background: var(--surface-brand);
+  border: none;
+  color: #fff;
+  box-shadow: var(--shadow-brand);
+}
+
+/* ---------- StatusPill — uppercase, bold, radius 24 ---------- */
+
+.shyft-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shyft-pill--system {
+  background: var(--azure-soft);
+  color: var(--azure);
+}
+
+.shyft-pill--neutral {
+  background: var(--gable-soft);
+  color: var(--gable-green);
+}
+
+.shyft-pill--positive {
+  background: var(--aqua-soft);
+  color: var(--positive-ink);
+}
+
+.shyft-pill--negative {
+  background: var(--coral);
+  color: #fff;
+}
+
+/* ---------- Tag — selectable filter chip ---------- */
+
+.shyft-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  background: var(--surface-card);
+  color: var(--text-body);
+  border: 1.5px solid var(--border-default);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.shyft-tag:hover {
+  border-color: var(--border-strong);
+}
+
+.shyft-tag:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.shyft-tag--selected,
+.shyft-tag--selected:hover {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+
+.shyft-tag--mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Segmented (Tag group) ---------- */
+
+.shyft-segmented {
+  display: inline-flex;
+  gap: 8px;
+}
+
+/* ---------- Callout — soft tint fills ---------- */
+
+.shyft-callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-body);
+}
+
+.shyft-callout--neutral {
+  background: var(--gable-soft);
+  color: var(--text-secondary);
+}
+
+.shyft-callout--success {
+  background: var(--aqua-soft);
+  color: var(--positive-ink);
+}
+
+.shyft-callout--danger {
+  background: var(--coral-soft);
+  color: var(--negative-ink);
+}
+
+/* ---------- Spinner ---------- */
+
+.shyft-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: shyft-spin 0.7s linear infinite;
+}
+
+@keyframes shyft-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Skeleton ---------- */
+
+.shyft-skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--gable-soft) 25%,
+    var(--line) 50%,
+    var(--gable-soft) 75%
+  );
+  background-size: 200% 100%;
+  animation: shyft-shimmer 1.4s ease infinite;
+}
+
+@keyframes shyft-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------- Accordion ---------- */
+
+.shyft-accordion {
+  border-bottom: 1px solid var(--line);
+}
+
+.shyft-accordion summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 4px;
+  font-size: var(--fs-title);
+  font-weight: var(--fw-bold);
+  color: var(--text-strong);
+  cursor: pointer;
+  list-style: none;
+}
+
+.shyft-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.shyft-accordion summary::after {
+  content: "+";
+  flex-shrink: 0;
+  font-size: 22px;
+  font-weight: var(--fw-regular);
+  color: var(--brand);
+  transition: transform 0.15s ease;
+}
+
+.shyft-accordion[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.shyft-accordion__body {
+  padding: 0 4px 20px;
+  color: var(--text-secondary);
+  max-width: 65ch;
+}
+
+/* ---------- Definition rows (ListRow rhythm) ---------- */
+
+.shyft-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.shyft-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-body);
+}
+
+.shyft-row:last-child {
+  border-bottom: none;
+}
+
+.shyft-row dt {
+  color: var(--text-secondary);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.shyft-row dd {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  color: var(--text-strong);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.shyft-row dd.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Flags (flag-icons) ---------- */
+
+.shyft-flag {
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(27, 43, 58, 0.08);
+}

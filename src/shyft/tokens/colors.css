@@ -1,0 +1,148 @@
+/* ============================================================
+   SHYFT · COLOR TOKENS  (source: Shyft Design System v1.0)
+   Gable Green, White and Azure — supported by accents of Bright
+   Blue — are the primary digital colours. Keep at least 2 of the
+   4 primaries present in any design. Secondary/tertiary are used
+   sparingly (photography, illustration, charts).
+   ============================================================ */
+:root {
+  /* ---- PRIMARY ---- */
+  --gable-green: #1b2b3a;   /* primary text, dark surfaces, footers */
+  --white:       #ffffff;   /* backgrounds, reversed type */
+  --azure:       #156dff;   /* PRIMARY brand, covers, key actions */
+  --bright-blue: #00b5ef;   /* accent, arrows, highlights */
+
+  /* ---- SECONDARY (used sparingly) ---- */
+  --aqua:        #14d7be;   /* positive states, success */
+  --violet:      #804ded;   /* charts, illustration */
+  --royal:       #4559eb;   /* charts, extended palette */
+
+  /* ---- TERTIARY (extended palette only) ---- */
+  --coral:       #d65c72;   /* high-risk / alerts, charts */
+  --sand:        #e59e6d;   /* extended palette, charts */
+
+  /* ---- Derived brand shades (hover / press) ---- */
+  --azure-strong:  #0d56d6;
+  --azure-stronger:#0a45ad;
+
+  /* ---- SOFT TINTS (surfaces & fills) ---- */
+  --azure-soft:  #eaf2ff;
+  --bright-soft: #e7f9ff;
+  --aqua-soft:   #e4f8f4;
+  --coral-soft:  #fbecef;
+  --violet-soft: #f1eafd;
+  --gable-soft:  #eef1f4;
+  --sand-soft:   #fbf0e6;
+  --paper:       #f7f9fb;
+
+  /* ---- NEUTRALS (text & lines) ---- */
+  --ink:   #1b2b3a;   /* body text (= Gable Green) */
+  --grey:  #5b6b7b;   /* secondary text */
+  --mute:  #8a98a6;   /* captions, meta */
+  --line:  #e3e8ee;   /* borders, dividers */
+  --line-strong: #ccd5de;
+
+  /* ============================================================
+     SEMANTIC ALIASES — prefer these in components.
+     ============================================================ */
+
+  /* Brand */
+  --brand:          var(--azure);
+  --brand-strong:   var(--azure-strong);
+  --brand-stronger: var(--azure-stronger);
+  --brand-soft:     var(--azure-soft);
+  --accent:         var(--bright-blue);
+  --accent-soft:    var(--bright-soft);
+  --brand-on:       var(--white);
+
+  /* Text */
+  --text-strong:   var(--gable-green);  /* headings & primary text */
+  --text-body:     var(--gable-green);  /* paragraph copy */
+  --text-secondary:var(--grey);         /* secondary copy */
+  --text-muted:    var(--mute);         /* captions, meta, icons */
+  --text-disabled: var(--mute);
+  --text-on-brand: var(--white);
+  --text-link:     var(--azure);
+
+  /* Surfaces */
+  --surface-page:    var(--paper);
+  --surface-card:    var(--white);
+  --surface-sunken:  var(--gable-soft);
+  --surface-brand:   var(--azure);
+  --surface-inverse: var(--gable-green);
+
+  /* Borders */
+  --border-subtle: var(--line);
+  --border-default:var(--line);
+  --border-strong: var(--line-strong);
+  --border-brand:  var(--azure);
+  --border-focus:  var(--azure);
+
+  /* Status (forex app: gains aqua, alerts coral) */
+  --positive:      var(--aqua);
+  --positive-ink:  #0c6b5d;
+  --positive-soft: var(--aqua-soft);
+  --negative:      var(--coral);
+  --negative-ink:  #a83248;
+  --negative-soft: var(--coral-soft);
+  --warning:       var(--sand);
+  --warning-ink:   #9a5a26;
+  --warning-soft:  var(--sand-soft);
+
+  /* Focus ring */
+  --ring: 0 0 0 4px rgba(21, 109, 255, 0.22);
+}
+
+/* ============================================================
+   DARK THEME — Globalview dashboard & dark surfaces.
+   Apply with <html data-theme="dark"> or any [data-theme="dark"]
+   ancestor. Brand Azure stays; surfaces go deep navy-black.
+   ============================================================ */
+[data-theme="dark"] {
+  /* dark palette anchors */
+  --night-900: #070b12;   /* page canvas */
+  --night-850: #0a0f18;
+  --night-800: #0d1420;   /* card surface */
+  --night-700: #131c2b;   /* raised / hover */
+  --night-600: #1b2636;   /* sunken wells */
+  --night-line: #1e293b;  /* borders */
+
+  /* Text */
+  --text-strong:   #ffffff;
+  --text-body:     #c7d0dc;
+  --text-secondary:#9aa6b4;
+  --text-muted:    #6b7888;
+  --text-disabled: #4b5666;
+  --text-on-brand: #ffffff;
+  --text-link:     #4d92ff;
+
+  /* Surfaces */
+  --surface-page:    var(--night-900);
+  --surface-card:    var(--night-800);
+  --surface-sunken:  var(--night-600);
+  --surface-brand:   var(--azure);
+  --surface-inverse: #ffffff;
+
+  /* Borders */
+  --border-subtle: var(--night-line);
+  --border-default: var(--night-line);
+  --border-strong: #2b3a52;
+  --line:        var(--night-line);
+  --line-strong: #2b3a52;
+
+  /* Soft tints re-based for dark (translucent brand washes) */
+  --azure-soft:  rgba(21, 109, 255, 0.16);
+  --bright-soft: rgba(0, 181, 239, 0.16);
+  --aqua-soft:   rgba(20, 215, 190, 0.16);
+  --coral-soft:  rgba(214, 92, 114, 0.18);
+  --violet-soft: rgba(128, 77, 237, 0.18);
+  --gable-soft:  rgba(255, 255, 255, 0.06);
+  --paper:       var(--night-850);
+
+  /* Status text legibility on dark */
+  --positive-ink: #2fe0bf;
+  --negative-ink: #ff7a86;
+  --warning-ink:  #f0a35a;
+
+  --ring: 0 0 0 4px rgba(21, 109, 255, 0.40);
+}

@@ -88,12 +88,3 @@ export function countryName(code: string): string {
     return code.toUpperCase();
   }
 }
-
-export function countryFlag(code: string): string {
-  if (!/^[A-Z]{2}$/i.test(code)) return "";
-  const upper = code.toUpperCase();
-  return String.fromCodePoint(
-    0x1f1e6 + upper.charCodeAt(0) - 65,
-    0x1f1e6 + upper.charCodeAt(1) - 65,
-  );
-}

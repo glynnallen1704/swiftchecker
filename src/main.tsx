@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./shyft/tokens.css";
-import "./shyft/shyft.css";
+import "flag-icons/css/flag-icons.min.css";
+import "./shyft/styles.css";
 import "./app.css";
 import App from "./App";
 

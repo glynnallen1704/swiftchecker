@@ -1,0 +1,45 @@
+/* ============================================================
+   SHYFT · BASE / RESET — applied wherever styles.css is linked.
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--text-body);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--text-strong);
+  font-weight: var(--fw-extrabold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--lh-heading);
+}
+
+p { margin: 0; }
+
+a { color: var(--text-link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button { font-family: inherit; }
+
+/* Utility: wide-tracked uppercase section label (the brand "01 COLOUR" style) */
+.sh-overline {
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-overline);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Tabular figures for currency/rates */
+.sh-tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }

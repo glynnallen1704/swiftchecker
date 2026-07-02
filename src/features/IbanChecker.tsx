@@ -1,8 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { Badge, Button, Callout, Card, Chip, CopyButton, Input, Skeleton } from "../shyft";
+import { Button, Callout, Card, CopyButton, Flag, Input, Skeleton, StatusPill, Tag } from "../shyft";
 import { validateIban, ApiError, type IbanRecord } from "../lib/api";
 import {
-  countryFlag,
   countryName,
   ibanChecksumValid,
   isValidIbanFormat,
@@ -89,17 +88,18 @@ export function IbanChecker() {
       </form>
 
       <div className="example-chips">
-        <span className="example-chips__label">Try:</span>
+        <span className="sh-overline example-chips__label">Try</span>
         {EXAMPLES.map((example) => (
-          <Chip
+          <Tag
             key={example.code}
+            mono
             onClick={() => {
               setQuery(example.code);
               void check(example.code);
             }}
           >
             {example.code.slice(0, 12)}…
-          </Chip>
+          </Tag>
         ))}
       </div>
 
@@ -130,7 +130,7 @@ function IbanResultCard({ iban, record }: { iban: string; record: IbanRecord }) 
 
   const detailRows: { label: string; value: string; mono?: boolean }[] = [
     { label: "IBAN", value: prettyIban(iban), mono: true },
-    { label: "Country", value: `${countryFlag(country)} ${countryName(country)}`.trim() },
+    { label: "Country", value: countryName(country) },
     { label: "Check digits", value: parts.checkDigits, mono: true },
     { label: "BBAN", value: typeof record.bban === "string" && record.bban ? record.bban : parts.bban, mono: true },
   ];
@@ -145,14 +145,16 @@ function IbanResultCard({ iban, record }: { iban: string; record: IbanRecord }) 
     <Card className="result-card">
       <div className="result-card__header">
         <div>
-          <h3 className="result-card__title">{prettyIban(iban)}</h3>
+          <h3 className="result-card__title mono">{prettyIban(iban)}</h3>
           <div className="result-card__badges">
             {valid ? (
-              <Badge tone="success">✓ Valid IBAN</Badge>
+              <StatusPill tone="positive">IBAN · valid</StatusPill>
             ) : (
-              <Badge tone="danger">✕ Invalid IBAN</Badge>
+              <StatusPill tone="negative">IBAN · invalid</StatusPill>
             )}
-            <Badge>{countryFlag(country)} {countryName(country)}</Badge>
+            <StatusPill tone="neutral">
+              <Flag code={country} /> {countryName(country)}
+            </StatusPill>
           </div>
         </div>
         <CopyButton text={iban} label="Copy IBAN" />

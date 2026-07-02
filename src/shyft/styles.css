@@ -1,0 +1,10 @@
+/* Shyft Design System — global entry (mirrors the DS bundle's styles.css).
+   Token files under tokens/ are vendored verbatim from the Shyft Design
+   System v1.0 bundle — edit them only by re-syncing from the source project.
+   Fonts (Inter + JetBrains Mono) are loaded via <link> in index.html. */
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+@import "./tokens/radius.css";
+@import "./tokens/base.css";
+@import "./components.css";

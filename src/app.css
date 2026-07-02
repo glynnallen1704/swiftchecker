@@ -1,19 +1,65 @@
-/* Page-level layout for SwiftChecker, built on Shyft tokens. */
+/* SwiftChecker page layout — a Shyft-branded surface.
+   Full-bleed Azure cover with arch motifs, paper canvas, white cards. */
 
-/* ---------- Hero ---------- */
+/* SWIFT/IBAN breakdown segment colours — brand palette, charts usage */
+:root {
+  --seg-1: var(--azure);
+  --seg-2: var(--bright-blue);
+  --seg-3: var(--violet);
+  --seg-4: var(--aqua);
+}
+
+/* ---------- Hero — Azure cover with deconstructed-arrow arches ---------- */
 
 .hero {
-  background: var(--shyft-ink-deep);
-  background-image: radial-gradient(
-    ellipse 900px 420px at 70% -10%,
-    rgba(176, 242, 109, 0.14),
-    transparent 65%
-  );
-  color: var(--shyft-text-on-ink);
-  padding: 28px 24px 150px;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-brand);
+  color: #fff;
+  padding: 28px var(--gutter-lg) 150px;
+}
+
+.hero__arch {
+  position: absolute;
+  pointer-events: none;
+}
+
+.hero__arch--left {
+  width: 340px;
+  height: 340px;
+  border-radius: 0 340px 0 0;
+  bottom: 0;
+  left: -60px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.hero__arch--right {
+  width: 220px;
+  height: 220px;
+  border-radius: 220px 0 0 0;
+  top: -40px;
+  right: 40px;
+  background: rgba(0, 181, 239, 0.5);
+}
+
+.hero__chevrons {
+  position: absolute;
+  right: 36px;
+  bottom: 30px;
+  display: flex;
+  gap: 10px;
+}
+
+.hero__chevrons span {
+  width: 16px;
+  height: 16px;
+  border-top: 5px solid rgba(255, 255, 255, 0.55);
+  border-right: 5px solid rgba(255, 255, 255, 0.55);
+  transform: rotate(45deg);
 }
 
 .hero__inner {
+  position: relative;
   max-width: 880px;
   margin: 0 auto;
 }
@@ -21,36 +67,52 @@
 .hero__brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 72px;
+  gap: 14px;
+  margin-bottom: 64px;
 }
 
-.hero__brand-name {
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+.hero__brand img {
+  height: 30px;
+  display: block;
+}
+
+.hero__brand-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.hero__brand-product {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.hero__eyebrow {
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 16px;
 }
 
 .hero__title {
-  font-size: clamp(38px, 6vw, 62px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-  max-width: 14ch;
+  font-size: clamp(38px, 6vw, var(--fs-display-xl));
+  font-weight: var(--fw-black);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--lh-snug);
+  color: #fff;
+  max-width: 16ch;
 }
 
 .hero__title em {
-  font-family: var(--shyft-font-serif);
-  font-style: italic;
-  font-weight: 500;
-  color: var(--shyft-accent);
+  font-style: normal;
+  color: var(--bright-blue);
 }
 
 .hero__subtitle {
   margin-top: 20px;
-  font-size: 18px;
-  color: var(--shyft-text-on-ink-muted);
-  max-width: 52ch;
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-regular);
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 48ch;
 }
 
 /* ---------- Main / tool card ---------- */
@@ -58,52 +120,52 @@
 .main {
   max-width: 880px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--gutter);
 }
 
 .tool-card {
+  position: relative;
   margin-top: -96px;
-  padding: 28px clamp(20px, 4vw, 40px) 36px;
+  padding: var(--space-7) clamp(20px, 4vw, 40px) var(--space-8);
 }
 
 .tool-card__tabs {
   display: flex;
   justify-content: center;
-  margin-bottom: 28px;
+  margin-bottom: var(--space-7);
 }
 
 /* ---------- Search form ---------- */
 
 .search-form__label {
   display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--shyft-text-muted);
-  margin-bottom: 8px;
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text-body);
+  margin-bottom: var(--space-2);
 }
 
 .search-form__row {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
+  align-items: center;
 }
 
 .search-form__error {
   margin-top: 10px;
-  font-size: 14px;
-  color: var(--shyft-danger);
+  font-size: var(--fs-body-sm);
+  color: var(--negative-ink);
 }
 
 .example-chips {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin: 16px 0 8px;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 var(--space-2);
 }
 
 .example-chips__label {
-  font-size: 13px;
-  color: var(--shyft-text-faint);
   margin-right: 2px;
 }
 
@@ -112,35 +174,43 @@
 .results-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .result-card {
-  margin-top: 24px;
+  margin-top: var(--space-6);
   padding: clamp(20px, 4vw, 32px);
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: var(--space-6);
 }
 
 .result-card__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .result-card__title {
-  font-size: clamp(19px, 3vw, 24px);
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: clamp(19px, 3vw, var(--fs-h2));
+  font-weight: var(--fw-extrabold);
+  letter-spacing: var(--tracking-title);
+  color: var(--text-strong);
   overflow-wrap: anywhere;
+}
+
+.result-card__title.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 .result-card__badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: var(--space-2);
   margin-top: 10px;
 }
 
@@ -149,21 +219,22 @@
 .swift-breakdown {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 22px clamp(16px, 3vw, 28px);
-  background: var(--shyft-surface-sunken);
-  border-radius: var(--shyft-radius-md);
+  gap: var(--space-4);
+  padding: var(--space-6) clamp(16px, 3vw, 28px);
+  background: var(--azure-soft);
+  border-radius: var(--radius-md);
 }
 
 .swift-breakdown__code {
   display: flex;
   flex-wrap: wrap;
   gap: clamp(8px, 2vw, 18px);
-  font-family: var(--shyft-font-mono);
-  font-size: clamp(24px, 5vw, 38px);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--shyft-ink);
+  font-family: var(--font-mono);
+  font-size: clamp(24px, 5vw, var(--fs-display-md));
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--text-strong);
 }
 
 .swift-breakdown__segment {
@@ -181,9 +252,11 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--shyft-text-muted);
+  font-size: var(--fs-overline);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-overline);
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
 .swift-breakdown__dot {
@@ -195,65 +268,99 @@
 /* ---------- Info sections ---------- */
 
 .info-section {
-  padding: 72px 0 24px;
+  padding: var(--section-y) 0 var(--space-6);
 }
 
-.info-section--alt .info-section__inner {
-  background: var(--shyft-ink);
-  color: var(--shyft-text-on-ink);
-  border-radius: var(--shyft-radius-lg);
-  padding: clamp(28px, 5vw, 48px);
-}
-
-.info-section--alt p {
-  color: var(--shyft-text-on-ink-muted);
-}
-
-.info-section--alt strong {
-  color: var(--shyft-accent);
+.info-section__eyebrow {
+  color: var(--brand);
+  margin-bottom: var(--space-3);
 }
 
 .info-section__inner h2 {
-  font-size: clamp(26px, 4vw, 34px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin-bottom: 16px;
+  font-size: clamp(26px, 4vw, var(--fs-h1));
+  font-weight: var(--fw-extrabold);
+  letter-spacing: var(--tracking-title);
+  margin-bottom: var(--space-4);
 }
 
 .info-section__inner p {
   max-width: 68ch;
-  color: var(--shyft-text-muted);
+  color: var(--text-secondary);
 }
 
 .info-section__example {
-  margin: 28px 0;
+  margin: var(--space-7) 0;
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 20px;
-  margin-top: 12px;
+  gap: var(--space-5);
+  margin-top: var(--space-3);
 }
 
 .info-grid__item h3 {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
   margin-bottom: 6px;
 }
 
 .info-grid__item p {
-  font-size: 14.5px;
-  color: var(--shyft-text-muted);
+  font-size: var(--fs-body-sm);
+  color: var(--text-secondary);
+}
+
+/* Brand (Azure) feature card with arch motif */
+.info-section--brand .info-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-brand);
+  color: #fff;
+  border-radius: var(--radius-xl);
+  padding: clamp(28px, 5vw, 48px);
+  box-shadow: var(--shadow-brand);
+}
+
+.info-section--brand .info-card::before {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 0 260px 0 0;
+  bottom: 0;
+  left: -40px;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+.info-section--brand .info-card > * {
+  position: relative;
+}
+
+.info-section--brand h2 {
+  color: #fff;
+}
+
+.info-section--brand .info-section__eyebrow {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.info-section--brand p {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.info-section--brand strong {
+  color: #fff;
+  font-weight: var(--fw-bold);
 }
 
 /* ---------- Footer ---------- */
 
 .footer {
-  margin-top: 72px;
-  background: var(--shyft-ink-deep);
-  color: var(--shyft-text-on-ink-muted);
-  padding: 44px 24px;
+  margin-top: var(--section-y);
+  background: var(--surface-inverse);
+  color: rgba(255, 255, 255, 0.72);
+  padding: var(--space-9) var(--gutter);
 }
 
 .footer__inner {
@@ -261,39 +368,43 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
-.footer__brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  color: var(--shyft-text-on-ink);
+.footer__brand img {
+  height: 26px;
+  display: block;
 }
 
 .footer__disclaimer {
-  font-size: 14px;
+  font-size: var(--fs-body-sm);
   max-width: 68ch;
 }
 
 .footer a {
-  color: var(--shyft-accent);
+  color: var(--bright-blue);
 }
 
 /* ---------- Responsive ---------- */
 
 @media (max-width: 560px) {
   .hero {
-    padding-bottom: 130px;
+    padding: 24px var(--gutter) 130px;
   }
 
   .hero__brand {
-    margin-bottom: 48px;
+    margin-bottom: 44px;
+  }
+
+  .hero__arch--right {
+    width: 140px;
+    height: 140px;
+    right: 16px;
   }
 
   .search-form__row {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .search-form__row .shyft-btn {
@@ -312,9 +423,9 @@
     width: 100%;
   }
 
-  .tool-card__tabs .shyft-segmented__option {
+  .tool-card__tabs .shyft-tag {
     flex: 1;
-    padding: 10px 8px;
-    font-size: 14px;
+    justify-content: center;
+    padding: 0 8px;
   }
 }

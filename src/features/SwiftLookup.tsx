@@ -1,8 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { Badge, Button, Callout, Card, Chip, CopyButton, Input, Skeleton } from "../shyft";
+import { Button, Callout, Card, CopyButton, Flag, Input, Skeleton, StatusPill, Tag } from "../shyft";
 import { lookupSwift, ApiError, type SwiftRecord } from "../lib/api";
 import {
-  countryFlag,
   countryName,
   isValidSwiftFormat,
   normalizeSwift,
@@ -82,17 +81,18 @@ export function SwiftLookup() {
       </form>
 
       <div className="example-chips">
-        <span className="example-chips__label">Try:</span>
+        <span className="sh-overline example-chips__label">Try</span>
         {EXAMPLES.map((example) => (
-          <Chip
+          <Tag
             key={example.code}
+            mono
             onClick={() => {
               setQuery(example.code);
               void search(example.code);
             }}
           >
             {example.code}
-          </Chip>
+          </Tag>
         ))}
       </div>
 
@@ -132,7 +132,7 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
   const detailRows: { label: string; value: string; mono?: boolean }[] = [
     { label: "SWIFT / BIC code", value: code, mono: true },
     { label: "Bank code", value: parts.bank, mono: true },
-    { label: "Country", value: `${countryFlag(country)} ${countryName(country)}`.trim() },
+    { label: "Country", value: countryName(country) },
     { label: "Location code", value: parts.location, mono: true },
     {
       label: "Branch code",
@@ -153,8 +153,10 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
         <div>
           {bankName != null && <h3 className="result-card__title">{String(bankName)}</h3>}
           <div className="result-card__badges">
-            {isHeadOffice && <Badge tone="accent">Head office</Badge>}
-            <Badge>{countryFlag(country)} {countryName(country)}</Badge>
+            {isHeadOffice && <StatusPill tone="system">Head office</StatusPill>}
+            <StatusPill tone="neutral">
+              <Flag code={country} /> {countryName(country)}
+            </StatusPill>
           </div>
         </div>
         <CopyButton text={code} label="Copy code" />

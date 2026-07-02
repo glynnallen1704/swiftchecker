@@ -1,6 +1,7 @@
 /**
  * Shyft Design System — React components.
- * Thin wrappers over the shyft.css component classes.
+ * Mirrors the DS bundle's component set (Button, Input, Card, Tag,
+ * StatusPill, …) as thin wrappers over the components.css classes.
  */
 import { useState, type ReactNode, type ButtonHTMLAttributes, type InputHTMLAttributes } from "react";
 
@@ -8,7 +9,7 @@ import { useState, type ReactNode, type ButtonHTMLAttributes, type InputHTMLAttr
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost";
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
   loading?: boolean;
 }
 
@@ -51,35 +52,55 @@ export function Input({ error = false, className = "", ...rest }: InputProps) {
 /* ---------- Card ---------- */
 
 export function Card({
-  raised = false,
+  tone = "default",
   className = "",
   children,
 }: {
-  raised?: boolean;
+  tone?: "default" | "raised" | "brand";
   className?: string;
   children: ReactNode;
 }) {
+  const toneClass = tone === "default" ? "" : `shyft-card--${tone}`;
+  return <div className={`shyft-card ${toneClass} ${className}`}>{children}</div>;
+}
+
+/* ---------- StatusPill ---------- */
+
+export function StatusPill({
+  tone = "system",
+  children,
+}: {
+  tone?: "system" | "neutral" | "positive" | "negative";
+  children: ReactNode;
+}) {
+  return <span className={`shyft-pill shyft-pill--${tone}`}>{children}</span>;
+}
+
+/* ---------- Tag ---------- */
+
+export function Tag({
+  children,
+  selected = false,
+  mono = false,
+  onClick,
+}: {
+  children: ReactNode;
+  selected?: boolean;
+  mono?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <div className={`shyft-card ${raised ? "shyft-card--raised" : ""} ${className}`}>
+    <button
+      type="button"
+      className={`shyft-tag ${selected ? "shyft-tag--selected" : ""} ${mono ? "shyft-tag--mono" : ""}`}
+      onClick={onClick}
+    >
       {children}
-    </div>
+    </button>
   );
 }
 
-/* ---------- Badge ---------- */
-
-export function Badge({
-  tone = "neutral",
-  children,
-}: {
-  tone?: "neutral" | "accent" | "success" | "danger";
-  children: ReactNode;
-}) {
-  const toneClass = tone === "neutral" ? "" : `shyft-badge--${tone}`;
-  return <span className={`shyft-badge ${toneClass}`}>{children}</span>;
-}
-
-/* ---------- Segmented control ---------- */
+/* ---------- Segmented (Tag group) ---------- */
 
 export function Segmented<T extends string>({
   options,
@@ -99,23 +120,13 @@ export function Segmented<T extends string>({
           key={option.value}
           role="tab"
           aria-selected={option.value === value}
-          className="shyft-segmented__option"
+          className={`shyft-tag ${option.value === value ? "shyft-tag--selected" : ""}`}
           onClick={() => onChange(option.value)}
         >
           {option.label}
         </button>
       ))}
     </div>
-  );
-}
-
-/* ---------- Chip ---------- */
-
-export function Chip({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return (
-    <button type="button" className="shyft-chip" onClick={onClick}>
-      {children}
-    </button>
   );
 }
 
@@ -152,6 +163,19 @@ export function Accordion({ title, children }: { title: string; children: ReactN
   );
 }
 
+/* ---------- Flag — real country flags (flag-icons), never emoji ---------- */
+
+export function Flag({ code }: { code: string }) {
+  if (!/^[A-Z]{2}$/i.test(code)) return null;
+  return (
+    <span
+      className={`fi fi-${code.toLowerCase()} shyft-flag`}
+      role="img"
+      aria-label={`${code.toUpperCase()} flag`}
+    />
+  );
+}
+
 /* ---------- Copy button ---------- */
 
 export function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
@@ -168,8 +192,8 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
   }
 
   return (
-    <Button variant="ghost" size="md" onClick={copy} aria-live="polite">
-      {copied ? "Copied ✓" : label}
+    <Button variant="secondary" size="sm" onClick={copy} aria-live="polite">
+      {copied ? "Copied" : label}
     </Button>
   );
 }

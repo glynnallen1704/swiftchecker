@@ -1,10 +1,10 @@
 import { splitSwift } from "../lib/validation";
 
 const SEGMENTS = [
-  { key: "bank", label: "Bank code", varName: "--shyft-seg-1" },
-  { key: "country", label: "Country", varName: "--shyft-seg-2" },
-  { key: "location", label: "Location", varName: "--shyft-seg-3" },
-  { key: "branch", label: "Branch", varName: "--shyft-seg-4" },
+  { key: "bank", label: "Bank code", varName: "--seg-1" },
+  { key: "country", label: "Country", varName: "--seg-2" },
+  { key: "location", label: "Location", varName: "--seg-3" },
+  { key: "branch", label: "Branch", varName: "--seg-4" },
 ] as const;
 
 /** Wise-style visual anatomy of a SWIFT/BIC code with color-coded segments. */

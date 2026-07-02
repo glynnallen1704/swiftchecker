@@ -1,0 +1,27 @@
+/* ============================================================
+   SHYFT · RADIUS & ELEVATION
+   Generous, friendly fintech radii; pill capsules for chips,
+   tags and primary CTAs. Shadows are soft, cool-tinted and low.
+   ============================================================ */
+:root {
+  /* Corner radii (source: radius/card 14, radius/pill 24, radius/badge 50%) */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;     /* CARDS & panels (brand default) */
+  --radius-lg: 20px;     /* sheets, large panels */
+  --radius-xl: 28px;     /* bottom sheets, hero */
+  --radius-pill: 24px;   /* status pills & tags (per spec) */
+  --radius-full: 999px;  /* CTAs / capsules, avatars (step badge = 50%) */
+
+  /* Elevation — soft, gable-green tinted (source: shadow/card, shadow/soft) */
+  --shadow-xs: 0 1px 2px rgba(27, 43, 58, 0.06);
+  --shadow-sm: 0 2px 8px rgba(27, 43, 58, 0.06);
+  --shadow-md: 0 10px 30px rgba(27, 43, 58, 0.08);  /* the card shadow */
+  --shadow-lg: 0 20px 48px rgba(27, 43, 58, 0.12);
+  --shadow-brand: 0 12px 28px rgba(21, 109, 255, 0.30);
+
+  /* Z layers */
+  --z-sticky: 100;   /* @kind other */
+  --z-overlay: 1000; /* @kind other */
+  --z-toast: 1100;   /* @kind other */
+}

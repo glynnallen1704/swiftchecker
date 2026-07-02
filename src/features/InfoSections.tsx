@@ -6,6 +6,7 @@ export function InfoSections() {
     <>
       <section className="info-section" id="what-is-swift">
         <div className="info-section__inner">
+          <p className="sh-overline info-section__eyebrow">01 · SWIFT codes</p>
           <h2>What is a SWIFT / BIC code?</h2>
           <p>
             A SWIFT code — also called a BIC (Bank Identifier Code) — identifies a specific bank
@@ -36,8 +37,9 @@ export function InfoSections() {
         </div>
       </section>
 
-      <section className="info-section info-section--alt" id="swift-vs-iban">
-        <div className="info-section__inner">
+      <section className="info-section info-section--brand" id="swift-vs-iban">
+        <div className="info-card">
+          <p className="sh-overline info-section__eyebrow">02 · Know the difference</p>
           <h2>SWIFT vs IBAN — what's the difference?</h2>
           <p>
             Both are used for international payments, but they answer different questions: a SWIFT
@@ -50,6 +52,7 @@ export function InfoSections() {
 
       <section className="info-section" id="faq">
         <div className="info-section__inner">
+          <p className="sh-overline info-section__eyebrow">03 · FAQ</p>
           <h2>Frequently asked questions</h2>
           <Accordion title="Where do I find my SWIFT code?">
             <p>

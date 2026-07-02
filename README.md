@@ -47,16 +47,22 @@ and add `API_NINJAS_KEY` as a secret in the Worker's settings.
 
 ## The Shyft design system
 
-A small token-driven system in [`src/shyft/`](src/shyft):
+The site is styled with the **Shyft Design System v1.0** (synced from the owner's Claude Design
+project). Key brand rules applied here: Azure `#156dff` primary with Gable Green `#1b2b3a` ink and
+Bright Blue `#00b5ef` accent; Inter throughout (Black 900 display, tight tracking) with JetBrains
+Mono for codes and figures; 14–20px card radii with full-pill CTAs; soft gable-green-tinted
+shadows; the deconstructed-arrow arch motif on Azure covers; sentence case; status pills in
+uppercase; real country flags (via the `flag-icons` package), never emoji.
 
-- [`tokens.css`](src/shyft/tokens.css) — colors (deep forest ink `#0c231e`, lime accent
-  `#b0f26d`, warm surfaces), type (Inter + Fraunces italic for emphasis, mono for codes), radii
-  (pill geometry), elevation, motion.
-- [`shyft.css`](src/shyft/shyft.css) — component classes.
-- [`index.tsx`](src/shyft/index.tsx) — React components: `Button`, `Input`, `Card`, `Badge`,
-  `Segmented`, `Chip`, `Callout`, `Skeleton`, `Accordion`, `CopyButton`.
+Layout in [`src/shyft/`](src/shyft):
 
-Re-theming the whole site is a matter of editing the tokens file.
+- [`tokens/`](src/shyft/tokens) — color, typography, spacing and radius tokens **vendored
+  verbatim** from the DS bundle (including the `[data-theme="dark"]` palette). Don't hand-edit;
+  re-sync from the source design project.
+- [`components.css`](src/shyft/components.css) + [`index.tsx`](src/shyft/index.tsx) — React
+  components matching the DS component specs: `Button`, `Input`, `Card`, `StatusPill`, `Tag`,
+  `Segmented`, `Callout`, `Skeleton`, `Accordion`, `Flag`, `CopyButton`.
+- Official logo SVGs live in [`public/brand/`](public/brand).
 
 ## Project layout
 
