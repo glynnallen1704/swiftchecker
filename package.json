@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "deploy": "npm run build && wrangler deploy",
+    "gen:iban-registry": "node scripts/generate-iban-registry.mjs",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {

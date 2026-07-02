@@ -14,22 +14,6 @@ export interface SwiftRecord {
   [key: string]: unknown;
 }
 
-export interface IbanRecord {
-  iban?: string;
-  valid?: boolean;
-  country?: string;
-  country_code?: string;
-  checksum?: string;
-  check_digits?: string;
-  bban?: string;
-  bank_code?: string;
-  branch_code?: string;
-  account_number?: string;
-  bank_name?: string;
-  currency?: string;
-  [key: string]: unknown;
-}
-
 export interface SortCodeRecord {
   sort_code?: string;
   bank_name?: string;
@@ -102,12 +86,4 @@ export async function lookupRouting(number: string): Promise<RoutingRecord[]> {
     `/api/routing?number=${encodeURIComponent(number)}`,
   );
   return toRecordList(body);
-}
-
-export async function validateIban(iban: string): Promise<IbanRecord> {
-  const body = await request<IbanRecord>(`/api/iban?iban=${encodeURIComponent(iban)}`);
-  if (!body || typeof body !== "object") {
-    throw new ApiError("Unexpected response from the lookup service.");
-  }
-  return body;
 }

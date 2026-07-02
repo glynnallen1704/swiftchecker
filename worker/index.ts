@@ -1,10 +1,15 @@
 /**
- * Cloudflare Worker: API proxy for API Ninjas.
+ * Cloudflare Worker: bank-code API.
  *
- * The browser never sees the API Ninjas key — it calls /api/* on our own
- * origin and this worker attaches the key server-side. Responses are cached
- * at the edge (bank/SWIFT data changes rarely) to conserve API quota.
+ * /api/iban is served entirely in-house from the SWIFT IBAN Registry
+ * (src/lib/iban.ts) — no external API, no key, no quota.
+ *
+ * /api/swift, /api/sortcode and /api/routing proxy to API Ninjas (bank-name
+ * directories are licensed data). The browser never sees the API key — this
+ * worker attaches it server-side, and responses are cached at the edge
+ * (bank data changes rarely) to conserve API quota.
  */
+import { validateIban } from "../src/lib/iban";
 
 interface Env {
   API_NINJAS_KEY: string;
@@ -17,7 +22,6 @@ const CACHE_TTL_SECONDS = 60 * 60 * 24; // 24h — SWIFT/IBAN bank data is stati
 const CACHE_VERSION = "2";
 
 const SWIFT_RE = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
-const IBAN_RE = /^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$/;
 const SORT_CODE_RE = /^\d{6}$/;
 const ROUTING_RE = /^\d{9}$/;
 
@@ -25,19 +29,6 @@ const ROUTING_RE = /^\d{9}$/;
 function abaChecksumValid(routing: string): boolean {
   const d = [...routing].map(Number);
   return (3 * (d[0] + d[3] + d[6]) + 7 * (d[1] + d[4] + d[7]) + (d[2] + d[5] + d[8])) % 10 === 0;
-}
-
-/** ISO 13616 mod-97 IBAN checksum. */
-function ibanChecksumValid(iban: string): boolean {
-  const rearranged = iban.slice(4) + iban.slice(0, 4);
-  let remainder = 0;
-  for (const char of rearranged) {
-    const value = /[A-Z]/.test(char) ? String(char.charCodeAt(0) - 55) : char;
-    for (const digit of value) {
-      remainder = (remainder * 10 + Number(digit)) % 97;
-    }
-  }
-  return remainder === 1;
 }
 
 function json(body: unknown, status = 200, extraHeaders: Record<string, string> = {}): Response {
@@ -122,6 +113,27 @@ export default {
       return json({ error: "Method not allowed" }, 405);
     }
 
+    // Served in-house from the SWIFT IBAN Registry — no key or upstream call.
+    if (url.pathname === "/api/iban") {
+      const raw = url.searchParams.get("iban") ?? "";
+      if (!/^[\sA-Za-z0-9]{1,50}$/.test(raw)) {
+        return json({ error: "Invalid IBAN format, e.g. GB29NWBK60161331926819." }, 400);
+      }
+      const result = validateIban(raw);
+      return json({
+        iban: result.iban,
+        valid: result.valid,
+        ...(result.failure && { error_code: result.failure.code, reason: result.failure.message }),
+        country_code: result.countryCode,
+        country_name: result.countryName,
+        sepa: result.sepa,
+        check_digits: result.checkDigits,
+        bban: result.bban,
+        bank_code: result.bankCode,
+        branch_code: result.branchCode,
+      });
+    }
+
     if (!env.API_NINJAS_KEY) {
       return json({ error: "Server is not configured with an API key." }, 500);
     }
@@ -166,25 +178,6 @@ export default {
       return proxyToApiNinjas(
         `/routingnumber?routing_number=${encodeURIComponent(number)}`,
         `${url.origin}/api/routing?number=${number}`,
-        env,
-        ctx,
-      );
-    }
-
-    if (url.pathname === "/api/iban") {
-      const iban = (url.searchParams.get("iban") ?? "").replace(/\s+/g, "").toUpperCase();
-      if (!IBAN_RE.test(iban)) {
-        return json({ error: "Invalid IBAN format, e.g. GB29NWBK60161331926819." }, 400);
-      }
-      if (!ibanChecksumValid(iban)) {
-        return json(
-          { error: "This IBAN fails the checksum — one or more characters are wrong." },
-          400,
-        );
-      }
-      return proxyToApiNinjas(
-        `/iban?iban=${encodeURIComponent(iban)}`,
-        `${url.origin}/api/iban?iban=${iban}`,
         env,
         ctx,
       );

@@ -15,20 +15,25 @@ explainers.
 
 ```
 Browser ──> Cloudflare Worker (same origin)
+              ├── /api/iban?iban=...        ── fully in-house (SWIFT IBAN Registry), no API key
               ├── /api/swift?swift=...      ─┐
-              ├── /api/iban?iban=...         │ attaches X-Api-Key server-side,
-              ├── /api/sortcode?code=...     │ validates input, caches 24h at the edge
-              ├── /api/routing?number=...   ─┘
+              ├── /api/sortcode?code=...     │ attaches X-Api-Key server-side,
+              ├── /api/routing?number=...   ─┘ validates input, caches 24h at the edge
               └── everything else ──> static Vite build (SPA)
 ```
 
-- **The API Ninjas key never reaches the browser.** The React app only calls `/api/*` on its own
-  origin; the Worker (`worker/index.ts`) adds the key and proxies to `api.api-ninjas.com`.
-- Responses are cached at the Cloudflare edge for 24 hours (bank data is nearly static), which
-  keeps API quota usage low.
-- IBAN checksums (ISO 13616 mod-97) and US routing-number checksums (ABA mod-10) are verified
-  client-side first, so mistyped codes get instant feedback without an API call. The worker
-  re-checks both before spending upstream quota.
+- **IBAN validation is 100% in-house** — no paid API involved. `data/iban-registry.tsv` (the
+  SWIFT IBAN Registry) is compiled by `scripts/generate-iban-registry.mjs` into
+  `src/lib/iban-registry.ts`: per-country IBAN length, BBAN structure, bank/branch identifier
+  positions and SEPA membership for 89 countries. The engine (`src/lib/iban.ts`) runs
+  country-specific length + structure checks, the ISO 13616 mod-97 checksum, and extracts the
+  bank and branch codes. The generator verifies every country against the registry's own example
+  IBANs, so a bad transcription fails the build, not the user. The browser validates locally
+  (instant, offline-capable); `/api/iban` exposes the same engine for API consumers.
+- **The API Ninjas key never reaches the browser.** Bank-*name* directories (SWIFT BIC directory,
+  UK EISCD, US Fed routing directory) are licensed data, so SWIFT/sort-code/routing lookups proxy
+  to `api.api-ninjas.com` with the key attached server-side, 24h edge caching, and US
+  routing-number ABA checksums verified client- and worker-side before spending quota.
 
 ## Local development
 

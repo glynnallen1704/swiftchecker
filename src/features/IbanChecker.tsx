@@ -1,14 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { Button, Callout, Card, CopyButton, Flag, Input, Skeleton, StatusPill, Tag } from "../shyft";
-import { validateIban, ApiError, type IbanRecord } from "../lib/api";
-import {
-  countryName,
-  ibanChecksumValid,
-  isValidIbanFormat,
-  normalizeIban,
-  prettyIban,
-  splitIban,
-} from "../lib/validation";
+import { Button, Callout, Card, CopyButton, Flag, Input, StatusPill, Tag } from "../shyft";
+import { validateIban, type IbanResult } from "../lib/iban";
+import { prettyIban } from "../lib/validation";
 
 const EXAMPLES = [
   { code: "GB29NWBK60161331926819", name: "UK" },
@@ -16,48 +9,19 @@ const EXAMPLES = [
   { code: "FR1420041010050500013M02606", name: "France" },
 ];
 
-type Status =
-  | { kind: "idle" }
-  | { kind: "loading" }
-  | { kind: "error"; message: string }
-  | { kind: "result"; iban: string; record: IbanRecord };
-
 export function IbanChecker() {
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<Status>({ kind: "idle" });
-  const [formatError, setFormatError] = useState<string | null>(null);
+  const [result, setResult] = useState<IbanResult | null>(null);
 
-  async function check(rawIban: string) {
-    const iban = normalizeIban(rawIban);
-    if (!isValidIbanFormat(iban)) {
-      setFormatError(
-        "An IBAN starts with a 2-letter country code and 2 check digits, followed by up to 30 characters, e.g. GB29 NWBK 6016 1331 9268 19.",
-      );
-      return;
-    }
-    setFormatError(null);
-
-    // Instant local mod-97 check — no need to hit the API for a bad checksum.
-    if (!ibanChecksumValid(iban)) {
-      setStatus({ kind: "result", iban, record: { iban, valid: false } });
-      return;
-    }
-
-    setStatus({ kind: "loading" });
-    try {
-      const record = await validateIban(iban);
-      setStatus({ kind: "result", iban, record });
-    } catch (err) {
-      setStatus({
-        kind: "error",
-        message: err instanceof ApiError ? err.message : "Something went wrong. Please try again.",
-      });
-    }
+  // Validation is fully in-house (SWIFT IBAN Registry data + mod-97),
+  // so checking is synchronous — no API call, no loading state.
+  function check(rawIban: string) {
+    setResult(validateIban(rawIban));
   }
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
-    void check(query);
+    check(query);
   }
 
   return (
@@ -70,21 +34,20 @@ export function IbanChecker() {
           <Input
             id="iban-input"
             value={query}
-            error={formatError !== null}
+            error={result !== null && result.failure?.code === "format"}
             onChange={(e) => {
               setQuery(e.target.value);
-              setFormatError(null);
+              setResult(null);
             }}
             placeholder="e.g. GB29 NWBK 6016 1331 9268 19"
             autoComplete="off"
             spellCheck={false}
             maxLength={42}
           />
-          <Button type="submit" size="lg" loading={status.kind === "loading"}>
+          <Button type="submit" size="lg">
             Validate
           </Button>
         </div>
-        {formatError && <p className="search-form__error">{formatError}</p>}
       </form>
 
       <div className="example-chips">
@@ -95,7 +58,7 @@ export function IbanChecker() {
             mono
             onClick={() => {
               setQuery(example.code);
-              void check(example.code);
+              check(example.code);
             }}
           >
             {example.code.slice(0, 12)}…
@@ -103,64 +66,52 @@ export function IbanChecker() {
         ))}
       </div>
 
-      {status.kind === "loading" && <ResultSkeleton />}
-      {status.kind === "error" && <Callout tone="danger">{status.message}</Callout>}
-      {status.kind === "result" && <IbanResultCard iban={status.iban} record={status.record} />}
+      {result !== null && <IbanResultCard result={result} />}
     </div>
   );
 }
 
-const FIELD_LABELS: Record<string, string> = {
-  bank_name: "Bank",
-  bank_code: "Bank code",
-  branch_code: "Branch code",
-  account_number: "Account number",
-  currency: "Currency",
-  city: "City",
-};
-
-function IbanResultCard({ iban, record }: { iban: string; record: IbanRecord }) {
-  const parts = splitIban(iban);
-  const rawCountry = record.country_code ?? record.country ?? parts.country;
-  const country = typeof rawCountry === "string" && /^[A-Z]{2}$/i.test(rawCountry)
-    ? rawCountry
-    : parts.country;
-  // The API omitting `valid` shouldn't flag a checksum-valid IBAN as invalid.
-  const valid = record.valid !== false;
-
-  const detailRows: { label: string; value: string; mono?: boolean }[] = [
-    { label: "IBAN", value: prettyIban(iban), mono: true },
-    { label: "Country", value: countryName(country) },
-    { label: "Check digits", value: parts.checkDigits, mono: true },
-    { label: "BBAN", value: typeof record.bban === "string" && record.bban ? record.bban : parts.bban, mono: true },
-  ];
-  for (const [key, label] of Object.entries(FIELD_LABELS)) {
-    const value = record[key];
-    if (typeof value === "string" && value) {
-      detailRows.push({ label, value, mono: key.endsWith("_code") || key === "account_number" });
+function IbanResultCard({ result }: { result: IbanResult }) {
+  const detailRows: { label: string; value: string; mono?: boolean }[] = [];
+  if (result.valid) {
+    detailRows.push(
+      { label: "IBAN", value: prettyIban(result.iban), mono: true },
+      { label: "Country", value: result.countryName ?? result.countryCode ?? "", mono: false },
+      { label: "SEPA member", value: result.sepa ? "Yes" : "No" },
+      { label: "Check digits", value: result.checkDigits ?? "", mono: true },
+    );
+    if (result.bankCode) {
+      detailRows.push({ label: "Bank code", value: result.bankCode, mono: true });
     }
+    if (result.branchCode) {
+      detailRows.push({ label: "Branch code", value: result.branchCode, mono: true });
+    }
+    detailRows.push({ label: "BBAN", value: result.bban ?? "", mono: true });
   }
 
   return (
     <Card className="result-card">
       <div className="result-card__header">
         <div>
-          <h3 className="result-card__title mono">{prettyIban(iban)}</h3>
+          <h3 className="result-card__title mono">{prettyIban(result.iban)}</h3>
           <div className="result-card__badges">
-            {valid ? (
+            {result.valid ? (
               <StatusPill tone="positive">IBAN · valid</StatusPill>
             ) : (
               <StatusPill tone="negative">IBAN · invalid</StatusPill>
             )}
-            <StatusPill tone="neutral">
-              <Flag code={country} /> {countryName(country)}
-            </StatusPill>
+            {result.countryCode && result.countryName && (
+              <StatusPill tone="neutral">
+                <Flag code={result.countryCode} /> {result.countryName}
+              </StatusPill>
+            )}
+            {result.sepa && <StatusPill tone="system">SEPA</StatusPill>}
           </div>
         </div>
-        <CopyButton text={iban} label="Copy IBAN" />
+        <CopyButton text={result.iban} label="Copy IBAN" />
       </div>
 
-      {valid ? (
+      {result.valid ? (
         <>
           <dl className="shyft-rows">
             {detailRows.map((row) => (
@@ -171,27 +122,14 @@ function IbanResultCard({ iban, record }: { iban: string; record: IbanRecord }) 
             ))}
           </dl>
           <Callout tone="neutral">
-            A valid IBAN means the structure and checksum are correct — it doesn't guarantee the
-            account exists. Always confirm details with the recipient before sending money.
+            Checked against the SWIFT IBAN Registry: country format, length and checksum all pass.
+            A valid IBAN doesn't guarantee the account exists — always confirm details with the
+            recipient before sending money.
           </Callout>
         </>
       ) : (
-        <Callout tone="danger">
-          This IBAN fails the checksum test — one or more characters are wrong or out of order.
-          Re-check it with the account holder before making a transfer.
-        </Callout>
+        <Callout tone="danger">{result.failure?.message}</Callout>
       )}
-    </Card>
-  );
-}
-
-function ResultSkeleton() {
-  return (
-    <Card className="result-card">
-      <Skeleton width="55%" height={26} />
-      <Skeleton width="100%" height={16} />
-      <Skeleton width="100%" height={16} />
-      <Skeleton width="60%" height={16} />
     </Card>
   );
 }

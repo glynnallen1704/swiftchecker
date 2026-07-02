@@ -28,45 +28,8 @@ export function splitSwift(swift: string): SwiftParts {
   };
 }
 
-/* ---------- IBAN ---------- */
-
-export const IBAN_RE = /^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/;
-
-export function normalizeIban(raw: string): string {
-  return raw.replace(/\s+/g, "").toUpperCase();
-}
-
-export function isValidIbanFormat(iban: string): boolean {
-  return IBAN_RE.test(iban);
-}
-
-/** ISO 13616 mod-97 checksum — instant client-side validity check. */
-export function ibanChecksumValid(iban: string): boolean {
-  if (!isValidIbanFormat(iban)) return false;
-  const rearranged = iban.slice(4) + iban.slice(0, 4);
-  let remainder = 0;
-  for (const char of rearranged) {
-    const value = /[A-Z]/.test(char) ? String(char.charCodeAt(0) - 55) : char;
-    for (const digit of value) {
-      remainder = (remainder * 10 + Number(digit)) % 97;
-    }
-  }
-  return remainder === 1;
-}
-
-export interface IbanParts {
-  country: string;
-  checkDigits: string;
-  bban: string;
-}
-
-export function splitIban(iban: string): IbanParts {
-  return {
-    country: iban.slice(0, 2),
-    checkDigits: iban.slice(2, 4),
-    bban: iban.slice(4),
-  };
-}
+/* ---------- IBAN display ----------
+   (Validation lives in iban.ts, driven by the SWIFT IBAN Registry.) */
 
 /** Group an IBAN into blocks of 4 for display: GB29 NWBK 6016 ... */
 export function prettyIban(iban: string): string {
