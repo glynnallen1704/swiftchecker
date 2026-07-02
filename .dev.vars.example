@@ -1,0 +1,3 @@
+# Copy this file to .dev.vars (gitignored) for local development.
+# For production run: npx wrangler secret put API_NINJAS_KEY
+API_NINJAS_KEY=your-api-ninjas-key-here

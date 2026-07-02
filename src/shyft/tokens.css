@@ -1,0 +1,68 @@
+/* ============================================================
+   Shyft Design System — Design Tokens
+   A small, token-driven system: deep forest ink, lime accent,
+   soft warm surfaces, pill geometry, confident type.
+   ============================================================ */
+
+:root {
+  /* Brand color */
+  --shyft-ink: #12332c;
+  --shyft-ink-deep: #0c231e;
+  --shyft-ink-soft: #1d4a40;
+  --shyft-accent: #b0f26d;
+  --shyft-accent-strong: #9ae94f;
+  --shyft-on-accent: #10312a;
+
+  /* Surfaces */
+  --shyft-bg: #f7f8f4;
+  --shyft-surface: #ffffff;
+  --shyft-surface-sunken: #eef1ec;
+  --shyft-border: #e2e6e0;
+  --shyft-border-strong: #c8cfc9;
+
+  /* Text */
+  --shyft-text: #1b2d28;
+  --shyft-text-muted: #5f7169;
+  --shyft-text-faint: #8a988f;
+  --shyft-text-on-ink: #f4f7f2;
+  --shyft-text-on-ink-muted: #b9c8bf;
+
+  /* Feedback */
+  --shyft-success: #157f52;
+  --shyft-success-bg: #e8f6ee;
+  --shyft-danger: #c0330e;
+  --shyft-danger-bg: #fdefe9;
+  --shyft-warning: #97640a;
+  --shyft-warning-bg: #fdf5e3;
+
+  /* Data segments (SWIFT / IBAN breakdown highlighting) */
+  --shyft-seg-1: #2f6fed;
+  --shyft-seg-2: #a14fd8;
+  --shyft-seg-3: #e07c22;
+  --shyft-seg-4: #17915c;
+
+  /* Typography */
+  --shyft-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  --shyft-font-serif: "Fraunces", Georgia, serif;
+  --shyft-font-mono: "SF Mono", "Cascadia Code", "JetBrains Mono", ui-monospace,
+    Menlo, monospace;
+
+  /* Radii */
+  --shyft-radius-sm: 10px;
+  --shyft-radius-md: 16px;
+  --shyft-radius-lg: 24px;
+  --shyft-radius-pill: 999px;
+
+  /* Elevation */
+  --shyft-shadow-sm: 0 1px 2px rgba(18, 51, 44, 0.06);
+  --shyft-shadow-md: 0 4px 16px rgba(18, 51, 44, 0.08);
+  --shyft-shadow-lg: 0 12px 40px rgba(18, 51, 44, 0.14);
+
+  /* Focus */
+  --shyft-focus-ring: 0 0 0 3px rgba(23, 145, 92, 0.35);
+
+  /* Motion */
+  --shyft-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --shyft-speed: 160ms;
+}
