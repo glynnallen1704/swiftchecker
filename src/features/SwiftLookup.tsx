@@ -188,6 +188,13 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
           </div>
         ))}
       </dl>
+
+      {record.source === "community" && (
+        <Callout tone="neutral">
+          This result comes from an open community-maintained directory — double-check the details
+          with the bank before sending money.
+        </Callout>
+      )}
     </Card>
   );
 }

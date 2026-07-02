@@ -19,7 +19,7 @@ interface Env {
 const API_BASE = "https://api.api-ninjas.com/v1";
 const CACHE_TTL_SECONDS = 60 * 60 * 24; // 24h — SWIFT/IBAN bank data is static
 // Bump to invalidate all edge-cached lookups (e.g. after changing response shaping).
-const CACHE_VERSION = "3";
+const CACHE_VERSION = "4";
 
 const SWIFT_RE = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
 const SORT_CODE_RE = /^\d{6}$/;
@@ -56,6 +56,102 @@ async function lookupLei(bic: string, origin: string, env: Env): Promise<string 
   } catch {
     return null;
   }
+}
+
+interface FallbackBank {
+  n: string;
+  c?: string;
+  b?: string;
+}
+
+/**
+ * BIC -> bank details from the MIT-licensed community dataset
+ * (github.com/br99bry/swift-bank-codes), sharded into static assets by
+ * scripts/generate-swift-fallback.mjs. Used only when the primary lookup
+ * has no result.
+ */
+async function lookupFallbackBank(
+  bic: string,
+  origin: string,
+  env: Env,
+): Promise<{ bic: string; bank: FallbackBank } | null> {
+  try {
+    const shard = await env.ASSETS.fetch(
+      new Request(`${origin}/swift-fallback/${bic.slice(0, 2)}.json`),
+    );
+    if (!shard.ok) return null;
+    const map = (await shard.json()) as Record<string, FallbackBank>;
+    // Try the exact code, then head-office variants (8 <-> 11 chars).
+    const candidates =
+      bic.length === 11
+        ? [bic, ...(bic.endsWith("XXX") ? [bic.slice(0, 8)] : [])]
+        : [bic, `${bic}XXX`];
+    for (const candidate of candidates) {
+      if (map[candidate]) return { bic: candidate, bank: map[candidate] };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function handleSwift(
+  swift: string,
+  url: URL,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
+  const cache = caches.default;
+  const cacheKey = new Request(`${url.origin}/api/swift?swift=${swift}&cv=${CACHE_VERSION}`);
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  let upstreamOk = false;
+  let records: Record<string, unknown>[] = [];
+  try {
+    const upstream = await fetch(`${API_BASE}/swiftcode?swift=${encodeURIComponent(swift)}`, {
+      headers: { "X-Api-Key": env.API_NINJAS_KEY },
+    });
+    if (upstream.ok) {
+      upstreamOk = true;
+      const data = stripPremiumPlaceholders(JSON.parse((await upstream.text()) || "null"));
+      records = Array.isArray(data)
+        ? (data as Record<string, unknown>[])
+        : data && typeof data === "object"
+          ? [data as Record<string, unknown>]
+          : [];
+    }
+  } catch {
+    /* treated as upstream failure below */
+  }
+
+  // Fill gaps (or ride out an outage) from the community directory.
+  if (records.length === 0) {
+    const fallback = await lookupFallbackBank(swift, url.origin, env);
+    if (fallback) {
+      records = [
+        {
+          swift_code: fallback.bic,
+          bank_name: fallback.bank.n,
+          ...(fallback.bank.c && { city: fallback.bank.c }),
+          ...(fallback.bank.b && { branch: fallback.bank.b }),
+          country_code: fallback.bic.slice(4, 6),
+          source: "community",
+        },
+      ];
+    } else if (!upstreamOk) {
+      return json({ error: "Lookup service returned an error. Please try again." }, 502);
+    }
+  }
+
+  const lei = await lookupLei(swift, url.origin, env);
+  const body = lei ? records.map((record) => ({ ...record, lei })) : records;
+
+  // Don't cache fallback results served during an upstream outage — the
+  // primary source should win again as soon as it recovers.
+  const response = json(body, 200, upstreamOk ? {} : { "Cache-Control": "no-store" });
+  if (upstreamOk) ctx.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
 }
 
 async function proxyToApiNinjas(
@@ -176,20 +272,7 @@ export default {
       if (!SWIFT_RE.test(swift)) {
         return json({ error: "Invalid SWIFT/BIC format. Expected 8 or 11 characters, e.g. CITIUS33XXX." }, 400);
       }
-      // Enrich each result with the bank's LEI from the GLEIF mapping.
-      const enrichWithLei = async (data: unknown): Promise<unknown> => {
-        const records = Array.isArray(data) ? data : data && typeof data === "object" ? [data] : [];
-        const lei = await lookupLei(swift, url.origin, env);
-        if (!lei) return data;
-        return records.map((record) => ({ ...record, lei }));
-      };
-      return proxyToApiNinjas(
-        `/swiftcode?swift=${encodeURIComponent(swift)}`,
-        `${url.origin}/api/swift?swift=${swift}`,
-        env,
-        ctx,
-        enrichWithLei,
-      );
+      return handleSwift(swift, url, env, ctx);
     }
 
     if (url.pathname === "/api/sortcode") {

@@ -25,3 +25,4 @@ worker-configuration.d.ts
 # logs
 npm-debug.log*
 *.log
+.cache

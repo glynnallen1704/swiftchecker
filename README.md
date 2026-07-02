@@ -27,6 +27,12 @@ Browser ──> Cloudflare Worker (same origin)
   relationship file, CC0) is sharded by `scripts/generate-lei-map.mjs` into small static JSON
   files under `public/lei-map/`; the worker fetches only the relevant shard (edge-cached) to
   enrich SWIFT lookups with the bank's Legal Entity Identifier, linked to its GLEIF record.
+- **SWIFT lookups have a free fallback directory** — 51k BICs with bank name/city/branch from
+  the MIT-licensed [swift-bank-codes](https://github.com/br99bry/swift-bank-codes) dataset,
+  sharded by `scripts/generate-swift-fallback.mjs` into `public/swift-fallback/`. The worker
+  uses it only when the primary API has no result (a gap, or an outage — outage-served results
+  aren't cached so the primary wins again once it recovers), and such results carry
+  `"source": "community"` plus a verify-with-your-bank note in the UI.
 
 - **IBAN validation is 100% in-house** — no paid API involved. `data/iban-registry.tsv` (the
   SWIFT IBAN Registry) is compiled by `scripts/generate-iban-registry.mjs` into

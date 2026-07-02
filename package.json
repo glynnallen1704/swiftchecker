@@ -10,6 +10,7 @@
     "deploy": "npm run build && wrangler deploy",
     "gen:iban-registry": "node scripts/generate-iban-registry.mjs",
     "gen:lei-map": "node scripts/generate-lei-map.mjs",
+    "gen:swift-fallback": "node scripts/generate-swift-fallback.mjs",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
