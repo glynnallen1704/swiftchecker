@@ -44,17 +44,26 @@ function json(body: unknown, status = 200, extraHeaders: Record<string, string> 
   });
 }
 
+interface LeiInfo {
+  lei: string;
+  /** Registered legal name from GLEIF Level-1 data, when extracted. */
+  name: string | null;
+}
+
 /**
  * BIC -> LEI lookup from GLEIF's open mapping file, sharded into static
  * assets by the first two BIC characters (see scripts/generate-lei-map.mjs).
+ * Shard values are either "LEI" or ["LEI", "LEGAL NAME"].
  */
-async function lookupLei(bic: string, origin: string, env: Env): Promise<string | null> {
+async function lookupLei(bic: string, origin: string, env: Env): Promise<LeiInfo | null> {
   const full = bic.length === 8 ? `${bic}XXX` : bic;
   try {
     const shard = await env.ASSETS.fetch(new Request(`${origin}/lei-map/${full.slice(0, 2)}.json`));
     if (!shard.ok) return null;
-    const map = (await shard.json()) as Record<string, string>;
-    return map[full] ?? null;
+    const map = (await shard.json()) as Record<string, string | [string, string]>;
+    const entry = map[full];
+    if (!entry) return null;
+    return Array.isArray(entry) ? { lei: entry[0], name: entry[1] } : { lei: entry, name: null };
   } catch {
     return null;
   }
@@ -173,8 +182,14 @@ async function handleSwift(
     }
   }
 
-  const lei = await lookupLei(swift, url.origin, env);
-  const body = lei ? records.map((record) => ({ ...record, lei })) : records;
+  const leiInfo = await lookupLei(swift, url.origin, env);
+  const body = leiInfo
+    ? records.map((record) => ({
+        ...record,
+        lei: leiInfo.lei,
+        ...(leiInfo.name && { lei_name: leiInfo.name }),
+      }))
+    : records;
 
   // Don't cache fallback results served during an upstream outage — the
   // primary source should win again as soon as it recovers.
@@ -284,11 +299,12 @@ export default {
       if (!SWIFT_RE.test(bic)) {
         return json({ error: "Invalid BIC format. Expected 8 or 11 characters, e.g. CITIUS33XXX." }, 400);
       }
-      const lei = await lookupLei(bic, url.origin, env);
+      const info = await lookupLei(bic, url.origin, env);
       return json({
         bic,
-        lei,
-        ...(lei && { gleif_url: `https://search.gleif.org/#/record/${lei}` }),
+        lei: info?.lei ?? null,
+        ...(info?.name && { name: info.name }),
+        ...(info && { gleif_url: `https://search.gleif.org/#/record/${info.lei}` }),
       });
     }
 

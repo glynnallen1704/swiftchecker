@@ -13,6 +13,8 @@ export interface SwiftRecord {
   country_code?: string;
   /** Legal Entity Identifier, attached by the worker from GLEIF's open BIC->LEI mapping. */
   lei?: string;
+  /** Registered legal name from GLEIF Level-1 data, when extracted locally. */
+  lei_name?: string;
   /** "community" when served from the fallback directory rather than the primary API. */
   source?: string;
   [key: string]: unknown;

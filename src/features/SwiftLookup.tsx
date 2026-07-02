@@ -124,7 +124,7 @@ function SwiftResults({ query, records }: { query: string; records: SwiftRecord[
 function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord }) {
   const code = normalizeSwift(String(record.swift_code ?? query));
   const parts = splitSwift(code);
-  const bankName = record.bank_name ?? record.bank;
+  const bankName = record.bank_name ?? record.bank ?? record.lei_name;
   const rawCountry = record.country_code ?? record.country ?? parts.country;
   const country = typeof rawCountry === "string" ? rawCountry : parts.country;
   const isHeadOffice = parts.branch === null || parts.branch === "XXX";
@@ -145,6 +145,9 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
   }
   if (typeof record.branch === "string" && record.branch) {
     detailRows.push({ label: "Branch name", value: record.branch });
+  }
+  if (typeof record.lei_name === "string" && record.lei_name) {
+    detailRows.push({ label: "Registered name (GLEIF)", value: record.lei_name });
   }
   if (typeof record.lei === "string" && record.lei) {
     detailRows.push({
