@@ -21,7 +21,7 @@ interface Env {
 const API_BASE = "https://api.api-ninjas.com/v1";
 const CACHE_TTL_SECONDS = 60 * 60 * 24; // 24h — SWIFT/IBAN bank data is static
 // Bump to invalidate all edge-cached lookups (e.g. after changing response shaping).
-const CACHE_VERSION = "5";
+const CACHE_VERSION = "6";
 
 const SWIFT_RE = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
 const SORT_CODE_RE = /^\d{6}$/;
