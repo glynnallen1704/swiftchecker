@@ -13,13 +13,15 @@ import { validateIban } from "../src/lib/iban";
 
 interface Env {
   API_NINJAS_KEY: string;
+  /** Test seam: override the API Ninjas base URL (e.g. a local mock in dev). */
+  API_NINJAS_BASE?: string;
   ASSETS: Fetcher;
 }
 
 const API_BASE = "https://api.api-ninjas.com/v1";
 const CACHE_TTL_SECONDS = 60 * 60 * 24; // 24h — SWIFT/IBAN bank data is static
 // Bump to invalidate all edge-cached lookups (e.g. after changing response shaping).
-const CACHE_VERSION = "4";
+const CACHE_VERSION = "5";
 
 const SWIFT_RE = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
 const SORT_CODE_RE = /^\d{6}$/;
@@ -109,7 +111,8 @@ async function handleSwift(
   let upstreamOk = false;
   let records: Record<string, unknown>[] = [];
   try {
-    const upstream = await fetch(`${API_BASE}/swiftcode?swift=${encodeURIComponent(swift)}`, {
+    const base = env.API_NINJAS_BASE ?? API_BASE;
+    const upstream = await fetch(`${base}/swiftcode?swift=${encodeURIComponent(swift)}`, {
       headers: { "X-Api-Key": env.API_NINJAS_KEY },
     });
     if (upstream.ok) {
@@ -123,6 +126,32 @@ async function handleSwift(
     }
   } catch {
     /* treated as upstream failure below */
+  }
+
+  // Primary returned records, but possibly with gaps (e.g. premium-gated
+  // bank name stripped) — fill missing fields from the community directory.
+  if (records.length > 0 && records.some((r) => !r.bank_name || !r.city || !r.branch)) {
+    const fallback = await lookupFallbackBank(swift, url.origin, env);
+    if (fallback) {
+      records = records.map((record) => {
+        const filled = { ...record };
+        let usedCommunity = false;
+        if (!filled.bank_name && fallback.bank.n) {
+          filled.bank_name = fallback.bank.n;
+          usedCommunity = true;
+        }
+        if (!filled.city && fallback.bank.c) {
+          filled.city = fallback.bank.c;
+          usedCommunity = true;
+        }
+        if (!filled.branch && fallback.bank.b) {
+          filled.branch = fallback.bank.b;
+          usedCommunity = true;
+        }
+        if (usedCommunity) filled.source = "mixed";
+        return filled;
+      });
+    }
   }
 
   // Fill gaps (or ride out an outage) from the community directory.

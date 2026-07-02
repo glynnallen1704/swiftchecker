@@ -195,6 +195,12 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
           with the bank before sending money.
         </Callout>
       )}
+      {record.source === "mixed" && (
+        <Callout tone="neutral">
+          Some details were filled in from an open community-maintained directory — double-check
+          them with the bank before sending money.
+        </Callout>
+      )}
     </Card>
   );
 }
