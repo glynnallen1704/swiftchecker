@@ -16,11 +16,17 @@ explainers.
 ```
 Browser ──> Cloudflare Worker (same origin)
               ├── /api/iban?iban=...        ── fully in-house (SWIFT IBAN Registry), no API key
-              ├── /api/swift?swift=...      ─┐
-              ├── /api/sortcode?code=...     │ attaches X-Api-Key server-side,
-              ├── /api/routing?number=...   ─┘ validates input, caches 24h at the edge
+              ├── /api/lei?bic=...          ── fully in-house (GLEIF BIC->LEI mapping), no API key
+              ├── /api/swift?swift=...      ─┐ attaches X-Api-Key server-side, validates input,
+              ├── /api/sortcode?code=...     │ caches 24h at the edge; /api/swift results are
+              ├── /api/routing?number=...   ─┘ enriched with the bank's LEI from the GLEIF mapping
               └── everything else ──> static Vite build (SPA)
 ```
+
+- **BIC -> LEI mapping is in-house and free** — `data/lei-bic.csv` (GLEIF's open BIC-to-LEI
+  relationship file, CC0) is sharded by `scripts/generate-lei-map.mjs` into small static JSON
+  files under `public/lei-map/`; the worker fetches only the relevant shard (edge-cached) to
+  enrich SWIFT lookups with the bank's Legal Entity Identifier, linked to its GLEIF record.
 
 - **IBAN validation is 100% in-house** — no paid API involved. `data/iban-registry.tsv` (the
   SWIFT IBAN Registry) is compiled by `scripts/generate-iban-registry.mjs` into

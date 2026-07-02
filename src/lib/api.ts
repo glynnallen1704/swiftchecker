@@ -11,6 +11,8 @@ export interface SwiftRecord {
   branch?: string;
   country?: string;
   country_code?: string;
+  /** Legal Entity Identifier, attached by the worker from GLEIF's open BIC->LEI mapping. */
+  lei?: string;
   [key: string]: unknown;
 }
 

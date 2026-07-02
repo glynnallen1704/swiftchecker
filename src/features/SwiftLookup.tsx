@@ -129,7 +129,7 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
   const country = typeof rawCountry === "string" ? rawCountry : parts.country;
   const isHeadOffice = parts.branch === null || parts.branch === "XXX";
 
-  const detailRows: { label: string; value: string; mono?: boolean }[] = [
+  const detailRows: { label: string; value: string; mono?: boolean; href?: string }[] = [
     { label: "SWIFT / BIC code", value: code, mono: true },
     { label: "Bank code", value: parts.bank, mono: true },
     { label: "Country", value: countryName(country) },
@@ -145,6 +145,14 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
   }
   if (typeof record.branch === "string" && record.branch) {
     detailRows.push({ label: "Branch name", value: record.branch });
+  }
+  if (typeof record.lei === "string" && record.lei) {
+    detailRows.push({
+      label: "LEI (legal entity)",
+      value: record.lei,
+      mono: true,
+      href: `https://search.gleif.org/#/record/${record.lei}`,
+    });
   }
 
   return (
@@ -168,7 +176,15 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
         {detailRows.map((row) => (
           <div className="shyft-row" key={row.label}>
             <dt>{row.label}</dt>
-            <dd className={row.mono ? "mono" : undefined}>{row.value}</dd>
+            <dd className={row.mono ? "mono" : undefined}>
+              {row.href ? (
+                <a href={row.href} target="_blank" rel="noopener noreferrer">
+                  {row.value}
+                </a>
+              ) : (
+                row.value
+              )}
+            </dd>
           </div>
         ))}
       </dl>

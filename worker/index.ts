@@ -19,7 +19,7 @@ interface Env {
 const API_BASE = "https://api.api-ninjas.com/v1";
 const CACHE_TTL_SECONDS = 60 * 60 * 24; // 24h — SWIFT/IBAN bank data is static
 // Bump to invalidate all edge-cached lookups (e.g. after changing response shaping).
-const CACHE_VERSION = "2";
+const CACHE_VERSION = "3";
 
 const SWIFT_RE = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
 const SORT_CODE_RE = /^\d{6}$/;
@@ -42,11 +42,28 @@ function json(body: unknown, status = 200, extraHeaders: Record<string, string> 
   });
 }
 
+/**
+ * BIC -> LEI lookup from GLEIF's open mapping file, sharded into static
+ * assets by the first two BIC characters (see scripts/generate-lei-map.mjs).
+ */
+async function lookupLei(bic: string, origin: string, env: Env): Promise<string | null> {
+  const full = bic.length === 8 ? `${bic}XXX` : bic;
+  try {
+    const shard = await env.ASSETS.fetch(new Request(`${origin}/lei-map/${full.slice(0, 2)}.json`));
+    if (!shard.ok) return null;
+    const map = (await shard.json()) as Record<string, string>;
+    return map[full] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function proxyToApiNinjas(
   upstreamPath: string,
   cacheKeyUrl: string,
   env: Env,
   ctx: ExecutionContext,
+  transform?: (data: unknown) => Promise<unknown>,
 ): Promise<Response> {
   const cache = caches.default;
   const cacheKey = new Request(`${cacheKeyUrl}&cv=${CACHE_VERSION}`);
@@ -74,7 +91,9 @@ async function proxyToApiNinjas(
   }
 
   const body = await upstream.text();
-  const response = json(stripPremiumPlaceholders(JSON.parse(body || "null")));
+  let data = stripPremiumPlaceholders(JSON.parse(body || "null"));
+  if (transform) data = await transform(data);
+  const response = json(data);
   ctx.waitUntil(cache.put(cacheKey, response.clone()));
   return response;
 }
@@ -134,6 +153,20 @@ export default {
       });
     }
 
+    // Served in-house from GLEIF's open BIC->LEI mapping — no key needed.
+    if (url.pathname === "/api/lei") {
+      const bic = (url.searchParams.get("bic") ?? "").trim().toUpperCase();
+      if (!SWIFT_RE.test(bic)) {
+        return json({ error: "Invalid BIC format. Expected 8 or 11 characters, e.g. CITIUS33XXX." }, 400);
+      }
+      const lei = await lookupLei(bic, url.origin, env);
+      return json({
+        bic,
+        lei,
+        ...(lei && { gleif_url: `https://search.gleif.org/#/record/${lei}` }),
+      });
+    }
+
     if (!env.API_NINJAS_KEY) {
       return json({ error: "Server is not configured with an API key." }, 500);
     }
@@ -143,11 +176,19 @@ export default {
       if (!SWIFT_RE.test(swift)) {
         return json({ error: "Invalid SWIFT/BIC format. Expected 8 or 11 characters, e.g. CITIUS33XXX." }, 400);
       }
+      // Enrich each result with the bank's LEI from the GLEIF mapping.
+      const enrichWithLei = async (data: unknown): Promise<unknown> => {
+        const records = Array.isArray(data) ? data : data && typeof data === "object" ? [data] : [];
+        const lei = await lookupLei(swift, url.origin, env);
+        if (!lei) return data;
+        return records.map((record) => ({ ...record, lei }));
+      };
       return proxyToApiNinjas(
         `/swiftcode?swift=${encodeURIComponent(swift)}`,
         `${url.origin}/api/swift?swift=${swift}`,
         env,
         ctx,
+        enrichWithLei,
       );
     }
 
