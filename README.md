@@ -27,6 +27,11 @@ Browser ──> Cloudflare Worker (same origin)
   relationship file, CC0) is sharded by `scripts/generate-lei-map.mjs` into small static JSON
   files under `public/lei-map/`; the worker fetches only the relevant shard (edge-cached) to
   enrich SWIFT lookups with the bank's Legal Entity Identifier, linked to its GLEIF record.
+- **Location maps and legal entity details are free too** — UK sort-code results are geocoded
+  via [postcodes.io](https://postcodes.io) (worker-side, cached with the lookup) and US routing
+  results already include coordinates; both render an OpenStreetMap card marking the approximate
+  area. SWIFT results offer an on-demand "Show legal entity details" reveal backed by
+  `/api/lei-record`, which proxies GLEIF's free API with edge caching.
 - **SWIFT lookups have a free fallback directory** — 51k BICs with bank name/city/branch from
   the MIT-licensed [swift-bank-codes](https://github.com/br99bry/swift-bank-codes) dataset,
   sharded by `scripts/generate-swift-fallback.mjs` into `public/swift-fallback/`. The worker

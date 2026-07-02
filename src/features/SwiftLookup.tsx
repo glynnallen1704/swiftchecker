@@ -8,6 +8,7 @@ import {
   splitSwift,
 } from "../lib/validation";
 import { SwiftBreakdown } from "./SwiftBreakdown";
+import { LeiDetails } from "./LeiDetails";
 
 const EXAMPLES = [
   { code: "CITIUS33XXX", name: "Citibank, US" },
@@ -150,12 +151,7 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
     detailRows.push({ label: "Registered name (GLEIF)", value: record.lei_name });
   }
   if (typeof record.lei === "string" && record.lei) {
-    detailRows.push({
-      label: "LEI (legal entity)",
-      value: record.lei,
-      mono: true,
-      href: `https://search.gleif.org/#/record/${record.lei}`,
-    });
+    detailRows.push({ label: "LEI (legal entity)", value: record.lei, mono: true });
   }
 
   return (
@@ -191,6 +187,8 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
           </div>
         ))}
       </dl>
+
+      {typeof record.lei === "string" && record.lei && <LeiDetails lei={record.lei} />}
 
       {record.source === "community" && (
         <Callout tone="neutral">

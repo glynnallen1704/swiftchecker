@@ -15,13 +15,17 @@ interface Env {
   API_NINJAS_KEY: string;
   /** Test seam: override the API Ninjas base URL (e.g. a local mock in dev). */
   API_NINJAS_BASE?: string;
+  /** Test seam: override the postcodes.io base URL. */
+  POSTCODES_BASE?: string;
+  /** Test seam: override the GLEIF API base URL. */
+  GLEIF_API_BASE?: string;
   ASSETS: Fetcher;
 }
 
 const API_BASE = "https://api.api-ninjas.com/v1";
 const CACHE_TTL_SECONDS = 60 * 60 * 24; // 24h — SWIFT/IBAN bank data is static
 // Bump to invalidate all edge-cached lookups (e.g. after changing response shaping).
-const CACHE_VERSION = "6";
+const CACHE_VERSION = "7";
 
 const SWIFT_RE = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
 const SORT_CODE_RE = /^\d{6}$/;
@@ -104,6 +108,138 @@ async function lookupFallbackBank(
   } catch {
     return null;
   }
+}
+
+interface GleifAddress {
+  addressLines?: string[];
+  city?: string;
+  region?: string;
+  country?: string;
+  postalCode?: string;
+}
+
+function formatGleifAddress(address: GleifAddress | undefined): string | null {
+  if (!address) return null;
+  const parts = [
+    ...(address.addressLines ?? []),
+    address.city,
+    address.region,
+    address.postalCode,
+    address.country,
+  ].filter((part): part is string => typeof part === "string" && part.length > 0);
+  return parts.length > 0 ? parts.join(", ") : null;
+}
+
+/**
+ * Live LEI record details from GLEIF's free public API, reduced to the
+ * fields worth showing and edge-cached for a day.
+ */
+async function handleLeiRecord(lei: string, url: URL, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const cache = caches.default;
+  const cacheKey = new Request(`${url.origin}/api/lei-record?lei=${lei}&cv=${CACHE_VERSION}`);
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  let upstream: Response;
+  try {
+    const base = env.GLEIF_API_BASE ?? "https://api.gleif.org";
+    upstream = await fetch(`${base}/api/v1/lei-records/${encodeURIComponent(lei)}`, {
+      headers: { Accept: "application/vnd.api+json" },
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch {
+    return json({ error: "The GLEIF registry is unreachable right now. Please try again." }, 502);
+  }
+  if (upstream.status === 404) {
+    return json({ error: "No GLEIF record found for this LEI." }, 404);
+  }
+  if (!upstream.ok) {
+    return json({ error: "The GLEIF registry returned an error. Please try again." }, 502);
+  }
+
+  const record = (await upstream.json()) as {
+    data?: {
+      attributes?: {
+        entity?: {
+          legalName?: { name?: string };
+          status?: string;
+          jurisdiction?: string;
+          legalForm?: { id?: string };
+          legalAddress?: GleifAddress;
+          headquartersAddress?: GleifAddress;
+        };
+        registration?: {
+          initialRegistrationDate?: string;
+          lastUpdateDate?: string;
+          nextRenewalDate?: string;
+          status?: string;
+        };
+      };
+    };
+  };
+  const entity = record.data?.attributes?.entity;
+  const registration = record.data?.attributes?.registration;
+  const date = (value: string | undefined) => (value ? value.slice(0, 10) : null);
+
+  const response = json({
+    lei,
+    legal_name: entity?.legalName?.name ?? null,
+    entity_status: entity?.status ?? null,
+    jurisdiction: entity?.jurisdiction ?? null,
+    legal_address: formatGleifAddress(entity?.legalAddress),
+    hq_address: formatGleifAddress(entity?.headquartersAddress),
+    registration_status: registration?.status ?? null,
+    registered_at: date(registration?.initialRegistrationDate),
+    last_updated: date(registration?.lastUpdateDate),
+    next_renewal: date(registration?.nextRenewalDate),
+    gleif_url: `https://search.gleif.org/#/record/${lei}`,
+  });
+  ctx.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
+}
+
+/**
+ * UK postcode -> coordinates via postcodes.io (free, open, no key).
+ * Failures degrade to "no map" — never block the lookup itself.
+ */
+async function geocodeUkPostcode(
+  postcode: string,
+  env: Env,
+): Promise<{ latitude: number; longitude: number } | null> {
+  try {
+    const base = env.POSTCODES_BASE ?? "https://api.postcodes.io";
+    const response = await fetch(`${base}/postcodes/${encodeURIComponent(postcode)}`, {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) return null;
+    const body = (await response.json()) as {
+      result?: { latitude?: number; longitude?: number };
+    };
+    const { latitude, longitude } = body.result ?? {};
+    return typeof latitude === "number" && typeof longitude === "number"
+      ? { latitude, longitude }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Attach coordinates to sort-code records that have a postcode but no lat/lon. */
+async function enrichWithUkGeo(data: unknown, env: Env): Promise<unknown> {
+  const records = Array.isArray(data) ? data : data && typeof data === "object" ? [data] : [];
+  if (records.length === 0) return data;
+  const first = records[0] as Record<string, unknown>;
+  if (first.latitude != null || typeof first.postcode !== "string" || !first.postcode) {
+    return data;
+  }
+  const geo = await geocodeUkPostcode(first.postcode, env);
+  if (!geo) return data;
+  return records.map((record) => ({
+    ...(record as Record<string, unknown>),
+    latitude: geo.latitude,
+    longitude: geo.longitude,
+    geo_source: "postcode",
+  }));
 }
 
 async function handleSwift(
@@ -213,7 +349,8 @@ async function proxyToApiNinjas(
 
   let upstream: Response;
   try {
-    upstream = await fetch(`${API_BASE}${upstreamPath}`, {
+    const base = env.API_NINJAS_BASE ?? API_BASE;
+    upstream = await fetch(`${base}${upstreamPath}`, {
       headers: { "X-Api-Key": env.API_NINJAS_KEY },
     });
   } catch {
@@ -308,6 +445,15 @@ export default {
       });
     }
 
+    // Live LEI record details via GLEIF's free API — no key needed.
+    if (url.pathname === "/api/lei-record") {
+      const lei = (url.searchParams.get("lei") ?? "").trim().toUpperCase();
+      if (!/^[A-Z0-9]{20}$/.test(lei)) {
+        return json({ error: "Invalid LEI format. Expected 20 characters." }, 400);
+      }
+      return handleLeiRecord(lei, url, env, ctx);
+    }
+
     if (!env.API_NINJAS_KEY) {
       return json({ error: "Server is not configured with an API key." }, 500);
     }
@@ -330,6 +476,7 @@ export default {
         `${url.origin}/api/sortcode?code=${code}`,
         env,
         ctx,
+        (data) => enrichWithUkGeo(data, env),
       );
     }
 

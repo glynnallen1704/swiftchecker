@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Button, Callout, Card, CopyButton, Flag, Input, Skeleton, StatusPill, Tag } from "../shyft";
+import { OsmMapCard } from "./OsmMapCard";
 import { ApiError, lookupRouting, lookupSortCode } from "../lib/api";
 import {
   abaChecksumValid,
@@ -206,12 +207,26 @@ const KNOWN_LABELS: Record<string, string> = {
   swift_code: "SWIFT / BIC code",
 };
 
-const HIDDEN_FIELDS = new Set(["sort_code", "routing_number", "country", "country_code"]);
+const HIDDEN_FIELDS = new Set([
+  "sort_code",
+  "routing_number",
+  "country",
+  "country_code",
+  // shown as the map card instead of rows
+  "latitude",
+  "longitude",
+  "geo_source",
+]);
 const MONO_FIELDS = new Set(["bic", "swift_code", "zip", "phone"]);
 
 function prettifyKey(key: string): string {
   const label = key.replace(/_/g, " ");
   return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function asCoordinate(value: unknown): number | null {
+  const num = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+  return Number.isFinite(num) ? num : null;
 }
 
 function DomesticResultCard({
@@ -224,6 +239,11 @@ function DomesticResultCard({
   record: Record<string, unknown>;
 }) {
   const bankName = record.bank_name ?? record.bank;
+  const latitude = asCoordinate(record.latitude);
+  const longitude = asCoordinate(record.longitude);
+  const placeLabel = [record.postcode ?? record.zip_code, record.city, record.state]
+    .filter((part) => typeof part === "string" && part)
+    .join(", ");
 
   const detailRows: { label: string; value: string; mono?: boolean }[] = [
     { label: config.codeLabel, value: config.pretty(code), mono: true },
@@ -264,6 +284,14 @@ function DomesticResultCard({
           </div>
         ))}
       </dl>
+
+      {latitude !== null && longitude !== null && (
+        <OsmMapCard
+          latitude={latitude}
+          longitude={longitude}
+          label={placeLabel || config.pretty(code)}
+        />
+      )}
     </Card>
   );
 }
