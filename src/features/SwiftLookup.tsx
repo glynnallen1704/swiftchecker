@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
+import { useResultCardIntro } from "../lib/motion";
 import { Button, Callout, Card, CopyButton, Flag, Input, Skeleton, StatusPill, Tag } from "../shyft";
 import { lookupSwift, ApiError, type SwiftRecord } from "../lib/api";
 import {
@@ -123,6 +124,8 @@ function SwiftResults({ query, records }: { query: string; records: SwiftRecord[
 }
 
 function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  useResultCardIntro(cardRef);
   const code = normalizeSwift(String(record.swift_code ?? query));
   const parts = splitSwift(code);
   const bankName = record.bank_name ?? record.bank ?? record.lei_name;
@@ -155,6 +158,7 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
   }
 
   return (
+    <div ref={cardRef}>
     <Card className="result-card">
       <div className="result-card__header">
         <div>
@@ -203,6 +207,7 @@ function SwiftResultCard({ query, record }: { query: string; record: SwiftRecord
         </Callout>
       )}
     </Card>
+    </div>
   );
 }
 

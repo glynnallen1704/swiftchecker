@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button, Callout } from "../shyft";
+import { EASE, gsap, reducedMotion, useGSAP } from "../lib/motion";
 
 interface LeiRecord {
   lei: string;
@@ -27,6 +28,22 @@ type Status =
  */
 export function LeiDetails({ lei }: { lei: string }) {
   const [status, setStatus] = useState<Status>({ kind: "collapsed" });
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (status.kind !== "open" || reducedMotion() || !panelRef.current) return;
+      gsap
+        .timeline({ defaults: { ease: EASE } })
+        .from(panelRef.current, { y: 14, autoAlpha: 0, duration: 0.35, clearProps: "all" })
+        .from(
+          ".shyft-row",
+          { y: 10, autoAlpha: 0, duration: 0.3, stagger: 0.04, clearProps: "all" },
+          "-=0.15",
+        );
+    },
+    { scope: panelRef, dependencies: [status.kind] },
+  );
 
   async function reveal() {
     setStatus({ kind: "loading" });
@@ -75,7 +92,7 @@ export function LeiDetails({ lei }: { lei: string }) {
   push("Next renewal", record.next_renewal);
 
   return (
-    <div className="lei-details">
+    <div className="lei-details" ref={panelRef}>
       <div className="lei-details__header">
         <span className="sh-overline">Legal entity record · GLEIF</span>
         <a href={record.gleif_url} target="_blank" rel="noopener noreferrer">

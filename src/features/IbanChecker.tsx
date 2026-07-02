@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
+import { useResultCardIntro } from "../lib/motion";
 import { Button, Callout, Card, CopyButton, Flag, Input, StatusPill, Tag } from "../shyft";
 import { validateIban, type IbanResult } from "../lib/iban";
 import { prettyIban } from "../lib/validation";
@@ -72,6 +73,8 @@ export function IbanChecker() {
 }
 
 function IbanResultCard({ result }: { result: IbanResult }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  useResultCardIntro(cardRef);
   const detailRows: { label: string; value: string; mono?: boolean }[] = [];
   if (result.valid) {
     detailRows.push(
@@ -90,6 +93,7 @@ function IbanResultCard({ result }: { result: IbanResult }) {
   }
 
   return (
+    <div ref={cardRef}>
     <Card className="result-card">
       <div className="result-card__header">
         <div>
@@ -131,5 +135,6 @@ function IbanResultCard({ result }: { result: IbanResult }) {
         <Callout tone="danger">{result.failure?.message}</Callout>
       )}
     </Card>
+    </div>
   );
 }

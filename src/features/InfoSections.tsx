@@ -1,10 +1,20 @@
+import { useRef } from "react";
 import { Accordion } from "../shyft";
 import { SwiftBreakdown } from "./SwiftBreakdown";
+import { useScrollRise } from "../lib/motion";
 
 export function InfoSections() {
+  const swiftRef = useRef<HTMLElement>(null);
+  const brandRef = useRef<HTMLElement>(null);
+  const faqRef = useRef<HTMLElement>(null);
+
+  useScrollRise(swiftRef, ".info-section__eyebrow, h2, .info-section__inner > p, .info-grid__item");
+  useScrollRise(brandRef, ".info-card", { y: 30 });
+  useScrollRise(faqRef, ".info-section__eyebrow, h2, .shyft-accordion", { stagger: 0.06 });
+
   return (
     <>
-      <section className="info-section" id="what-is-swift">
+      <section className="info-section" id="what-is-swift" ref={swiftRef}>
         <div className="info-section__inner">
           <p className="sh-overline info-section__eyebrow">01 · SWIFT codes</p>
           <h2>What is a SWIFT / BIC code?</h2>
@@ -37,7 +47,7 @@ export function InfoSections() {
         </div>
       </section>
 
-      <section className="info-section info-section--brand" id="swift-vs-iban">
+      <section className="info-section info-section--brand" id="swift-vs-iban" ref={brandRef}>
         <div className="info-card">
           <p className="sh-overline info-section__eyebrow">02 · Know the difference</p>
           <h2>SWIFT vs IBAN — what's the difference?</h2>
@@ -50,7 +60,7 @@ export function InfoSections() {
         </div>
       </section>
 
-      <section className="info-section" id="faq">
+      <section className="info-section" id="faq" ref={faqRef}>
         <div className="info-section__inner">
           <p className="sh-overline info-section__eyebrow">03 · FAQ</p>
           <h2>Frequently asked questions</h2>

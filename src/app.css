@@ -238,8 +238,17 @@
 }
 
 .swift-breakdown__segment {
-  border-bottom: 4px solid;
-  padding-bottom: 4px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.swift-breakdown__underline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 2px;
 }
 
 .swift-breakdown__legend {

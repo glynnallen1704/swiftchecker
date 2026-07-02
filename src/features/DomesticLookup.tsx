@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
+import { useResultCardIntro } from "../lib/motion";
 import { Button, Callout, Card, CopyButton, Flag, Input, Skeleton, StatusPill, Tag } from "../shyft";
 import { OsmMapCard } from "./OsmMapCard";
 import { ApiError, lookupRouting, lookupSortCode } from "../lib/api";
@@ -238,6 +239,8 @@ function DomesticResultCard({
   code: string;
   record: Record<string, unknown>;
 }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  useResultCardIntro(cardRef);
   const bankName = record.bank_name ?? record.bank;
   const latitude = asCoordinate(record.latitude);
   const longitude = asCoordinate(record.longitude);
@@ -260,6 +263,7 @@ function DomesticResultCard({
   }
 
   return (
+    <div ref={cardRef}>
     <Card className="result-card">
       <div className="result-card__header">
         <div>
@@ -293,6 +297,7 @@ function DomesticResultCard({
         />
       )}
     </Card>
+    </div>
   );
 }
 
