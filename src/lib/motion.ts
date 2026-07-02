@@ -6,11 +6,12 @@
 import type { RefObject } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
 
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP);
 
-export { gsap, useGSAP };
+export { gsap, useGSAP, SplitText };
 
 export const EASE = "power2.out";
 
