@@ -4,7 +4,7 @@ import { SwiftLookup } from "./features/SwiftLookup";
 import { IbanChecker } from "./features/IbanChecker";
 import { RoutingLookup, SortCodeLookup } from "./features/DomesticLookup";
 import { InfoSections } from "./features/InfoSections";
-import { EASE, gsap, reducedMotion, SplitText, useGSAP } from "./lib/motion";
+import { EASE, gsap, reducedMotion, useGSAP } from "./lib/motion";
 
 type Tool = "swift" | "iban" | "sortcode" | "routing";
 
@@ -24,21 +24,11 @@ export default function App() {
   useGSAP(
     () => {
       if (reducedMotion()) return;
-      // Per-word rise on the headline (SplitText keeps the <em> styling
-      // and adds an aria-label so screen readers get the full sentence).
-      const split = new SplitText(".hero__title", { type: "words" });
       gsap
-        .timeline({
-          defaults: { ease: EASE },
-          onComplete: () => split.revert(),
-        })
+        .timeline({ defaults: { ease: EASE } })
         .from(".hero__brand", { y: -12, autoAlpha: 0, duration: 0.45, clearProps: "all" })
         .from(".hero__eyebrow", { y: 14, autoAlpha: 0, duration: 0.4, clearProps: "all" }, "-=0.2")
-        .from(
-          split.words,
-          { y: 34, autoAlpha: 0, duration: 0.55, stagger: 0.06, clearProps: "all" },
-          "-=0.25",
-        )
+        .from(".hero__title", { y: 26, autoAlpha: 0, duration: 0.6, clearProps: "all" }, "-=0.25")
         .from(".hero__subtitle", { y: 18, autoAlpha: 0, duration: 0.5, clearProps: "all" }, "-=0.35")
         .from(".tool-card", { y: 44, autoAlpha: 0, duration: 0.6, clearProps: "all" }, "-=0.3")
         .from(
