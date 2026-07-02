@@ -1,9 +1,11 @@
 # SwiftChecker
 
-A beautiful, simple **SWIFT/BIC code lookup** and **IBAN validator** — built with Vite + React,
-hosted on **Cloudflare Workers**, powered by the
-[API Ninjas SWIFT Code](https://api-ninjas.com/api/swiftcode) and
-[IBAN](https://api-ninjas.com/api/iban) APIs, and styled with the in-repo **Shyft design system**.
+A beautiful, simple **bank code checker** — SWIFT/BIC lookup, IBAN validation, UK sort codes and
+US ABA routing numbers. Built with Vite + React, hosted on **Cloudflare Workers**, powered by the
+[SWIFT Code](https://api-ninjas.com/api/swiftcode), [IBAN](https://api-ninjas.com/api/iban),
+[Sort Code](https://api-ninjas.com/api/sortcode) and
+[Routing Number](https://api-ninjas.com/api/routingnumber) APIs from API Ninjas, and styled with
+the **Shyft design system**.
 
 Inspired by the way [Wise presents SWIFT codes](https://wise.com/gb/swift-codes/CITIUS33XXX):
 a big friendly search, a color-coded anatomy of the code, clean detail rows, and plain-language
@@ -13,8 +15,10 @@ explainers.
 
 ```
 Browser ──> Cloudflare Worker (same origin)
-              ├── /api/swift?swift=...   ─┐ attaches X-Api-Key server-side,
-              ├── /api/iban?iban=...     ─┘ validates input, caches 24h at the edge
+              ├── /api/swift?swift=...      ─┐
+              ├── /api/iban?iban=...         │ attaches X-Api-Key server-side,
+              ├── /api/sortcode?code=...     │ validates input, caches 24h at the edge
+              ├── /api/routing?number=...   ─┘
               └── everything else ──> static Vite build (SPA)
 ```
 
@@ -22,8 +26,9 @@ Browser ──> Cloudflare Worker (same origin)
   origin; the Worker (`worker/index.ts`) adds the key and proxies to `api.api-ninjas.com`.
 - Responses are cached at the Cloudflare edge for 24 hours (bank data is nearly static), which
   keeps API quota usage low.
-- IBAN checksums (ISO 13616 mod-97) are verified client-side first, so obviously mistyped IBANs
-  get instant feedback without an API call.
+- IBAN checksums (ISO 13616 mod-97) and US routing-number checksums (ABA mod-10) are verified
+  client-side first, so mistyped codes get instant feedback without an API call. The worker
+  re-checks both before spending upstream quota.
 
 ## Local development
 

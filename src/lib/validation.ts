@@ -73,6 +73,42 @@ export function prettyIban(iban: string): string {
   return iban.replace(/(.{4})/g, "$1 ").trim();
 }
 
+/* ---------- UK sort code ---------- */
+
+export const SORT_CODE_RE = /^\d{6}$/;
+
+export function normalizeSortCode(raw: string): string {
+  return raw.replace(/[\s-]+/g, "");
+}
+
+export function isValidSortCodeFormat(code: string): boolean {
+  return SORT_CODE_RE.test(code);
+}
+
+/** 200000 -> 20-00-00 */
+export function prettySortCode(code: string): string {
+  return `${code.slice(0, 2)}-${code.slice(2, 4)}-${code.slice(4, 6)}`;
+}
+
+/* ---------- US ABA routing number ---------- */
+
+export const ROUTING_RE = /^\d{9}$/;
+
+export function normalizeRouting(raw: string): string {
+  return raw.replace(/\s+/g, "");
+}
+
+export function isValidRoutingFormat(number: string): boolean {
+  return ROUTING_RE.test(number);
+}
+
+/** ABA checksum: 3·(d1+d4+d7) + 7·(d2+d5+d8) + (d3+d6+d9) ≡ 0 (mod 10). */
+export function abaChecksumValid(routing: string): boolean {
+  if (!isValidRoutingFormat(routing)) return false;
+  const d = [...routing].map(Number);
+  return (3 * (d[0] + d[3] + d[6]) + 7 * (d[1] + d[4] + d[7]) + (d[2] + d[5] + d[8])) % 10 === 0;
+}
+
 /* ---------- Country helpers ---------- */
 
 const regionNames =

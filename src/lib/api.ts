@@ -30,6 +30,25 @@ export interface IbanRecord {
   [key: string]: unknown;
 }
 
+export interface SortCodeRecord {
+  sort_code?: string;
+  bank_name?: string;
+  bank?: string;
+  branch?: string;
+  city?: string;
+  bic?: string;
+  [key: string]: unknown;
+}
+
+export interface RoutingRecord {
+  routing_number?: string;
+  bank_name?: string;
+  bank?: string;
+  city?: string;
+  state?: string;
+  [key: string]: unknown;
+}
+
 export class ApiError extends Error {}
 
 async function request<T>(path: string): Promise<T> {
@@ -62,9 +81,27 @@ export async function lookupSwift(swift: string): Promise<SwiftRecord[]> {
   const body = await request<SwiftRecord[] | SwiftRecord>(
     `/api/swift?swift=${encodeURIComponent(swift)}`,
   );
+  return toRecordList(body);
+}
+
+function toRecordList<T>(body: T[] | T | null): T[] {
   if (Array.isArray(body)) return body;
   if (body && typeof body === "object") return [body];
   return [];
+}
+
+export async function lookupSortCode(code: string): Promise<SortCodeRecord[]> {
+  const body = await request<SortCodeRecord[] | SortCodeRecord>(
+    `/api/sortcode?code=${encodeURIComponent(code)}`,
+  );
+  return toRecordList(body);
+}
+
+export async function lookupRouting(number: string): Promise<RoutingRecord[]> {
+  const body = await request<RoutingRecord[] | RoutingRecord>(
+    `/api/routing?number=${encodeURIComponent(number)}`,
+  );
+  return toRecordList(body);
 }
 
 export async function validateIban(iban: string): Promise<IbanRecord> {

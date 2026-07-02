@@ -2,12 +2,21 @@ import { useState } from "react";
 import { Card, Segmented } from "./shyft";
 import { SwiftLookup } from "./features/SwiftLookup";
 import { IbanChecker } from "./features/IbanChecker";
+import { RoutingLookup, SortCodeLookup } from "./features/DomesticLookup";
 import { InfoSections } from "./features/InfoSections";
 
-type Tool = "swift" | "iban";
+type Tool = "swift" | "iban" | "sortcode" | "routing";
+
+const TOOL_PANELS: Record<Tool, () => React.JSX.Element> = {
+  swift: SwiftLookup,
+  iban: IbanChecker,
+  sortcode: SortCodeLookup,
+  routing: RoutingLookup,
+};
 
 export default function App() {
   const [tool, setTool] = useState<Tool>("swift");
+  const Panel = TOOL_PANELS[tool];
 
   return (
     <>
@@ -23,13 +32,13 @@ export default function App() {
             <span className="hero__brand-divider" aria-hidden="true" />
             <span className="hero__brand-product">SwiftChecker</span>
           </div>
-          <p className="sh-overline hero__eyebrow">Swift &amp; IBAN checker</p>
+          <p className="sh-overline hero__eyebrow">Swift · IBAN · Sort code · Routing</p>
           <h1 className="hero__title">
             Check bank codes <em>before</em> the money moves
           </h1>
           <p className="hero__subtitle">
-            Look up any SWIFT/BIC code or validate an IBAN in seconds — free, accurate and built
-            for international payments.
+            Look up SWIFT/BIC codes, UK sort codes and US routing numbers, or validate an IBAN —
+            free, accurate and built for international payments.
           </p>
         </div>
       </header>
@@ -42,12 +51,14 @@ export default function App() {
               value={tool}
               onChange={setTool}
               options={[
-                { value: "swift", label: "SWIFT / BIC lookup" },
-                { value: "iban", label: "IBAN validator" },
+                { value: "swift", label: "SWIFT / BIC" },
+                { value: "iban", label: "IBAN" },
+                { value: "sortcode", label: "UK sort code" },
+                { value: "routing", label: "US routing" },
               ]}
             />
           </div>
-          {tool === "swift" ? <SwiftLookup /> : <IbanChecker />}
+          <Panel />
         </Card>
 
         <InfoSections />

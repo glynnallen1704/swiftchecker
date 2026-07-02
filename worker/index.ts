@@ -16,6 +16,27 @@ const CACHE_TTL_SECONDS = 60 * 60 * 24; // 24h — SWIFT/IBAN bank data is stati
 
 const SWIFT_RE = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
 const IBAN_RE = /^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$/;
+const SORT_CODE_RE = /^\d{6}$/;
+const ROUTING_RE = /^\d{9}$/;
+
+/** ABA checksum: 3·(d1+d4+d7) + 7·(d2+d5+d8) + (d3+d6+d9) ≡ 0 (mod 10). */
+function abaChecksumValid(routing: string): boolean {
+  const d = [...routing].map(Number);
+  return (3 * (d[0] + d[3] + d[6]) + 7 * (d[1] + d[4] + d[7]) + (d[2] + d[5] + d[8])) % 10 === 0;
+}
+
+/** ISO 13616 mod-97 IBAN checksum. */
+function ibanChecksumValid(iban: string): boolean {
+  const rearranged = iban.slice(4) + iban.slice(0, 4);
+  let remainder = 0;
+  for (const char of rearranged) {
+    const value = /[A-Z]/.test(char) ? String(char.charCodeAt(0) - 55) : char;
+    for (const digit of value) {
+      remainder = (remainder * 10 + Number(digit)) % 97;
+    }
+  }
+  return remainder === 1;
+}
 
 function json(body: unknown, status = 200, extraHeaders: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), {
@@ -94,10 +115,48 @@ export default {
       );
     }
 
+    if (url.pathname === "/api/sortcode") {
+      const code = (url.searchParams.get("code") ?? "").replace(/[\s-]+/g, "");
+      if (!SORT_CODE_RE.test(code)) {
+        return json({ error: "Invalid sort code format. Expected 6 digits, e.g. 20-00-00." }, 400);
+      }
+      return proxyToApiNinjas(
+        `/sortcode?sort_code=${encodeURIComponent(code)}`,
+        `${url.origin}/api/sortcode?code=${code}`,
+        env,
+        ctx,
+      );
+    }
+
+    if (url.pathname === "/api/routing") {
+      const number = (url.searchParams.get("number") ?? "").replace(/\s+/g, "");
+      if (!ROUTING_RE.test(number)) {
+        return json({ error: "Invalid routing number format. Expected 9 digits, e.g. 021000021." }, 400);
+      }
+      if (!abaChecksumValid(number)) {
+        return json(
+          { error: "This routing number fails the ABA checksum — one or more digits are wrong." },
+          400,
+        );
+      }
+      return proxyToApiNinjas(
+        `/routingnumber?routing_number=${encodeURIComponent(number)}`,
+        `${url.origin}/api/routing?number=${number}`,
+        env,
+        ctx,
+      );
+    }
+
     if (url.pathname === "/api/iban") {
       const iban = (url.searchParams.get("iban") ?? "").replace(/\s+/g, "").toUpperCase();
       if (!IBAN_RE.test(iban)) {
         return json({ error: "Invalid IBAN format, e.g. GB29NWBK60161331926819." }, 400);
+      }
+      if (!ibanChecksumValid(iban)) {
+        return json(
+          { error: "This IBAN fails the checksum — one or more characters are wrong." },
+          400,
+        );
       }
       return proxyToApiNinjas(
         `/iban?iban=${encodeURIComponent(iban)}`,

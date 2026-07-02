@@ -80,6 +80,22 @@ export function InfoSections() {
               Always double-check with the recipient.
             </p>
           </Accordion>
+          <Accordion title="What is a UK sort code?">
+            <p>
+              A sort code is a 6-digit number (written as three pairs, e.g. 20-00-00) that
+              identifies a specific UK bank branch for domestic payments. Together with the
+              8-digit account number it routes Faster Payments, BACS and CHAPS transfers within
+              the UK.
+            </p>
+          </Accordion>
+          <Accordion title="What is a US routing number?">
+            <p>
+              An ABA routing number is a 9-digit code that identifies a US bank or credit union
+              for domestic payments — direct deposits, wires and ACH transfers. Its last digit is
+              a checksum, so most typos are caught instantly. For international transfers to the
+              US you'll usually need the bank's SWIFT code as well.
+            </p>
+          </Accordion>
           <Accordion title="Do US bank accounts have IBANs?">
             <p>
               No — the United States doesn't use IBANs. For transfers to the US you'll typically
