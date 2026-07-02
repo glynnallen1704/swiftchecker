@@ -13,6 +13,8 @@ interface Env {
 
 const API_BASE = "https://api.api-ninjas.com/v1";
 const CACHE_TTL_SECONDS = 60 * 60 * 24; // 24h — SWIFT/IBAN bank data is static
+// Bump to invalidate all edge-cached lookups (e.g. after changing response shaping).
+const CACHE_VERSION = "2";
 
 const SWIFT_RE = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
 const IBAN_RE = /^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$/;
@@ -56,7 +58,7 @@ async function proxyToApiNinjas(
   ctx: ExecutionContext,
 ): Promise<Response> {
   const cache = caches.default;
-  const cacheKey = new Request(cacheKeyUrl);
+  const cacheKey = new Request(`${cacheKeyUrl}&cv=${CACHE_VERSION}`);
 
   const cached = await cache.match(cacheKey);
   if (cached) return cached;
@@ -81,9 +83,31 @@ async function proxyToApiNinjas(
   }
 
   const body = await upstream.text();
-  const response = json(JSON.parse(body || "null"));
+  const response = json(stripPremiumPlaceholders(JSON.parse(body || "null")));
   ctx.waitUntil(cache.put(cacheKey, response.clone()));
   return response;
+}
+
+/**
+ * On free API Ninjas plans, premium-gated fields come back with their value
+ * replaced by a "This field is for premium subscribers only." string. Drop
+ * those fields entirely so they never reach (or get cached for) clients.
+ */
+const PREMIUM_PLACEHOLDER_RE = /premium subscribers only/i;
+
+function stripPremiumPlaceholders(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(stripPremiumPlaceholders);
+  }
+  if (value && typeof value === "object") {
+    const cleaned: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value)) {
+      if (typeof entry === "string" && PREMIUM_PLACEHOLDER_RE.test(entry)) continue;
+      cleaned[key] = stripPremiumPlaceholders(entry);
+    }
+    return cleaned;
+  }
+  return value;
 }
 
 export default {
