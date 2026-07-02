@@ -1,0 +1,101 @@
+name: Monthly data refresh
+
+# Refreshes the free datasets this site serves:
+#   - data/lei-bic.csv        GLEIF BIC->LEI mapping (monthly upstream)
+#   - data/lei-names.csv      registered legal names via GLEIF's free API
+#   - public/lei-map/         regenerated shards
+#   - public/swift-fallback/  community SWIFT directory, re-downloaded
+# Opens a PR with the diff for review — nothing deploys automatically.
+
+on:
+  schedule:
+    - cron: "0 6 3 * *" # 06:00 UTC on the 3rd — after GLEIF's start-of-month publish
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  # If GLEIF moves this endpoint, update it here (or set a repository
+  # variable GLEIF_BIC_LEI_URL to override). Manual download page:
+  # https://www.gleif.org/en/lei-data/lei-mapping/download-bic-to-lei-relationship-files
+  GLEIF_BIC_LEI_URL: ${{ vars.GLEIF_BIC_LEI_URL || 'https://mapping.gleif.org/api/v2/bic-lei/latest/download' }}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download latest GLEIF BIC->LEI mapping
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 "$GLEIF_BIC_LEI_URL" -o /tmp/bic-lei-download
+          # The endpoint may serve a zip or a bare CSV — handle both.
+          if file /tmp/bic-lei-download | grep -qi zip; then
+            unzip -p /tmp/bic-lei-download '*.csv' > /tmp/bic-lei.csv
+          else
+            mv /tmp/bic-lei-download /tmp/bic-lei.csv
+          fi
+          header=$(head -n 1 /tmp/bic-lei.csv | tr -d '\r"')
+          if [ "$header" != "LEI,BIC" ]; then
+            echo "::error::Unexpected mapping file header: '$header' (expected 'LEI,BIC')."
+            echo "::error::The GLEIF endpoint may have changed — see the URL comment in this workflow."
+            exit 1
+          fi
+          # Guard: refuse a refresh that shrinks the dataset by >20%.
+          old=$(wc -l < data/lei-bic.csv)
+          new=$(wc -l < /tmp/bic-lei.csv)
+          echo "mapping rows: $old -> $new"
+          if [ "$new" -lt $((old * 80 / 100)) ]; then
+            echo "::error::New mapping has $new rows vs $old — >20% drop, refusing to proceed."
+            exit 1
+          fi
+          mv /tmp/bic-lei.csv data/lei-bic.csv
+
+      - name: Fetch registered legal names from the GLEIF API
+        run: |
+          set -euo pipefail
+          old=$(wc -l < data/lei-names.csv)
+          node scripts/extract-lei-names.mjs --from-api
+          new=$(wc -l < data/lei-names.csv)
+          echo "name rows: $old -> $new"
+          if [ "$new" -lt $((old * 80 / 100)) ]; then
+            echo "::error::Names file shrank from $old to $new rows — >20% drop, refusing to proceed."
+            exit 1
+          fi
+
+      - name: Regenerate LEI shards
+        run: node scripts/generate-lei-map.mjs
+
+      - name: Refresh community SWIFT directory and regenerate shards
+        run: node scripts/generate-swift-fallback.mjs
+
+      - name: Verify the site still builds
+        run: |
+          npm ci
+          npm run build
+
+      - name: Open pull request with the refreshed data
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: data-refresh/monthly
+          commit-message: "Monthly data refresh: GLEIF mapping, legal names, community SWIFT directory"
+          title: "Monthly data refresh"
+          body: |
+            Automated refresh of the free datasets:
+
+            - `data/lei-bic.csv` — latest GLEIF BIC->LEI mapping
+            - `data/lei-names.csv` — registered legal names via the GLEIF API
+            - `public/lei-map/` — regenerated shards
+            - `public/swift-fallback/` — community SWIFT directory re-downloaded
+
+            Generators validate their inputs (IBAN examples, row-count guards)
+            and the site build passed. Review the diff, then merge and deploy.
+          delete-branch: true

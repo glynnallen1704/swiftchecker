@@ -47,6 +47,17 @@ Browser ──> Cloudflare Worker (same origin)
   to `api.api-ninjas.com` with the key attached server-side, 24h edge caching, and US
   routing-number ABA checksums verified client- and worker-side before spending quota.
 
+## Keeping the data fresh
+
+A scheduled GitHub Action (`.github/workflows/data-refresh.yml`) runs monthly (and on demand via
+*Run workflow*): it downloads GLEIF's latest BIC->LEI mapping, refreshes registered legal names
+through GLEIF's free API, re-downloads the community SWIFT directory, regenerates all shards,
+verifies the build, and opens a pull request with the diff — nothing deploys without review.
+Row-count guards abort the refresh if an upstream source shrinks suspiciously. One-time setup:
+in repo *Settings → Actions → General*, enable "Allow GitHub Actions to create and approve pull
+requests". The IBAN registry (`data/iban-registry.tsv`) is updated manually — SWIFT publishes a
+few editions a year; replace the file and run `npm run gen:iban-registry`.
+
 ## Local development
 
 ```bash
